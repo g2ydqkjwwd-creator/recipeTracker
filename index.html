@@ -347,45 +347,51 @@
             }
         }
         
-        // Load recipes from Google Sheet
-        async function loadRecipesFromSheet() {
+        // Load recipes from Google Sheet using JSONP
+        function loadRecipesFromSheet() {
             try {
                 showStatus('Loading recipes from Google Sheet...', 'info');
-                console.log('Fetching from:', webAppUrl + '?action=getRecipes');
+                console.log('Loading from:', webAppUrl);
                 
-                const response = await fetch(webAppUrl + '?action=getRecipes', {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
+                // Create a script tag to load data (bypasses CORS)
+                const script = document.createElement('script');
+                const callbackName = 'handleRecipeData_' + Date.now();
                 
-                console.log('Response status:', response.status);
-                console.log('Response ok:', response.ok);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const text = await response.text();
-                console.log('Response text:', text);
-                
-                const data = JSON.parse(text);
-                console.log('Parsed data:', data);
-                
-                if (data.recipes && data.recipes.length > 0) {
-                    MASTER_RECIPES = data.recipes;
-                    showStatus(`Loaded ${MASTER_RECIPES.length} recipes!`, 'success');
+                // Create global callback
+                window[callbackName] = function(data) {
+                    console.log('Received data:', data);
                     
-                    // Populate dropdowns
-                    populateSelect(document.querySelector('.recipe-select'));
-                    setupSearch();
-                } else {
-                    showStatus('No recipes found. Check your "Recipes" sheet tab.', 'error');
-                    console.error('No recipes in response:', data);
-                }
+                    if (data.recipes && data.recipes.length > 0) {
+                        MASTER_RECIPES = data.recipes;
+                        showStatus(`Loaded ${MASTER_RECIPES.length} recipes!`, 'success');
+                        
+                        // Populate dropdowns
+                        populateSelect(document.querySelector('.recipe-select'));
+                        setupSearch();
+                    } else {
+                        showStatus('No recipes found. Check your "Recipes" sheet tab.', 'error');
+                        console.error('No recipes in response:', data);
+                    }
+                    
+                    // Cleanup
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                };
+                
+                // Set error handler
+                script.onerror = function() {
+                    showStatus('Error loading recipes. Click "Reload Recipes" to try again.', 'error');
+                    console.error('Script load error');
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                };
+                
+                // Add script to document
+                script.src = webAppUrl + '?action=getRecipes&callback=' + callbackName;
+                document.head.appendChild(script);
+                
             } catch (error) {
-                showStatus('Error loading recipes: ' + error.message + '. Click "Reload Recipes" to try again.', 'error');
+                showStatus('Error: ' + error.message, 'error');
                 console.error('Full error:', error);
             }
         }
