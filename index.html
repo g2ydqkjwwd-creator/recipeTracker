@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #f5f5f7;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #1d1d1f;
+            margin-bottom: 24px;
+            font-size: 28px;
+        }
+        
+        .setup-notice {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .setup-notice h3 {
+            color: #856404;
+            margin-bottom: 8px;
+        }
+        
+        .setup-notice p {
+            color: #856404;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #1d1d1f;
+            font-weight: 500;
+        }
+        
+        input[type="date"],
+        input[type="text"],
+        input[type="url"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+        }
+        
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+        
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #0071e3;
+        }
+        
+        .recipe-inputs {
+            margin-bottom: 16px;
+        }
+        
+        .recipe-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+        
+        .recipe-input-group select {
+            flex: 1;
+        }
+        
+        .search-wrapper {
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            padding-right: 40px;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .clear-search {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #d2d2d7;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            display: none;
+        }
+        
+        .clear-search.show {
+            display: block;
+        }
+        
+        .btn-remove {
+            padding: 12px 16px;
+            background: #ff3b30;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            white-space: nowrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            background: #0071e3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .btn:hover {
+            background: #0077ed;
+        }
+        
+        .btn:disabled {
+            background: #d2d2d7;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #6e6e73;
+        }
+        
+        .btn-secondary:hover {
+            background: #86868b;
+        }
+        
+        .btn-success {
+            background: #34c759;
+        }
+        
+        .btn-success:hover {
+            background: #30d158;
+        }
+        
+        .status-message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .sheets-link {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 12px 24px;
+            background: #34c759;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .sheets-link:hover {
+            background: #30d158;
+            text-decoration: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #86868b;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+            
+            .container {
+                padding: 16px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍳 Recipe Cooking Tracker</h1>
+        
+        <div class="setup-notice" id="setupNotice">
+            <h3>⚙️ Setup Required</h3>
+            <p>1. Enter your Google Apps Script Web App URL below</p>
+            <p>2. Make sure your Google Sheet has two tabs: "Recipes" (master list) and "Cooking Log" (entries)</p>
+            <p>3. The "Recipes" tab should have recipe names in column A (one per row, starting row 2)</p>
+        </div>
+        
+        <div class="form-group">
+            <label for="webAppUrl">Google Apps Script URL</label>
+            <input type="url" id="webAppUrl" placeholder="https://script.google.com/macros/s/...">
+            <button class="btn btn-secondary" onclick="saveWebAppUrl()" style="margin-top: 8px;">Save URL & Load Recipes</button>
+            <button class="btn btn-secondary" onclick="showFormManually()" style="margin-top: 8px;">Show Form Anyway</button>
+        </div>
+        
+        <div class="status-message" id="statusMessage"></div>
+        
+        <div id="mainForm" style="display:none;">
+            <div class="form-group">
+                <label for="date">Date</label>
+                <input type="date" id="date" required>
+            </div>
+            
+            <div class="recipe-inputs" id="recipeInputs">
+                <label>Recipes</label>
+                
+                <div class="form-group">
+                    <label for="recipeSearch">Search recipes:</label>
+                    <div class="search-wrapper">
+                        <input type="text" id="recipeSearch" class="search-input" placeholder="Type to filter recipes...">
+                        <button class="clear-search" onclick="clearSearch()">×</button>
+                    </div>
+                </div>
+                
+                <div class="recipe-input-group">
+                    <select class="recipe-select">
+                        <option value="">-- Select a recipe --</option>
+                    </select>
+                    <button class="btn-remove" onclick="removeRecipeInput(this)" style="display:none;">Remove</button>
+                </div>
+            </div>
+            
+            <button class="btn btn-secondary" onclick="addRecipeInput()">+ Add Another Recipe</button>
+            <button class="btn" onclick="saveEntry()">Save to Google Sheets</button>
+            
+            <br>
+            <a href="https://docs.google.com/spreadsheets/d/17CNvhJqO_YoaGzmPt0grt0Sbu_iu4vzIzwdjL0jWi6s/edit?usp=sharing" class="sheets-link" target="_blank">📊 Open Google Sheet</a>
+        </div>
+    </div>
+
+    <script>
+        let MASTER_RECIPES = [];
+        let webAppUrl = '';
+        
+        // Show form manually (bypass recipe loading)
+        function showFormManually() {
+            try {
+                console.log('Show form manually clicked');
+                document.getElementById('setupNotice').style.display = 'none';
+                document.getElementById('mainForm').style.display = 'block';
+                document.getElementById('date').valueAsDate = new Date();
+                showStatus('Form shown. Note: Recipe dropdown may be empty if recipes did not load.', 'info');
+            } catch (error) {
+                console.error('Error showing form:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        // Load saved URL
+        function loadWebAppUrl() {
+            try {
+                const saved = localStorage.getItem('googleSheetsWebAppUrl');
+                if (saved) {
+                    webAppUrl = saved;
+                    document.getElementById('webAppUrl').value = saved;
+                    loadRecipesFromSheet();
+                }
+            } catch (error) {
+                console.error('Error loading URL:', error);
+            }
+        }
+        
+        // Save Web App URL and load recipes
+        async function saveWebAppUrl() {
+            try {
+                const url = document.getElementById('webAppUrl').value.trim();
+                if (!url) {
+                    showStatus('Please enter a URL', 'error');
+                    return;
+                }
+                
+                if (!url.includes('script.google.com')) {
+                    showStatus('Invalid Google Apps Script URL', 'error');
+                    return;
+                }
+                
+                webAppUrl = url;
+                localStorage.setItem('googleSheetsWebAppUrl', url);
+                showStatus('URL saved! Loading recipes...', 'info');
+                
+                await loadRecipesFromSheet();
+            } catch (error) {
+                console.error('Error saving URL:', error);
+                showStatus('Error: ' + error.message, 'error');
+            }
+        }
+        
+        // Load recipes from Google Sheet
+        async function loadRecipesFromSheet() {
+            try {
+                showStatus('Loading recipes from Google Sheet...', 'info');
+                console.log('Fetching from:', webAppUrl + '?action=getRecipes');
+                
+                const response = await fetch(webAppUrl + '?action=getRecipes', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const text = await response.text();
+                console.log('Response text:', text);
+                
+                const data = JSON.parse(text);
+                console.log('Parsed data:', data);
+                
+                if (data.recipes && data.recipes.length > 0) {
+                    MASTER_RECIPES = data.recipes;
+                    showStatus(`Loaded ${MASTER_RECIPES.length} recipes!`, 'success');
+                    document.getElementById('setupNotice').style.display = 'none';
+                    document.getElementById('mainForm').style.display = 'block';
+                    
+                    // Populate dropdowns
+                    populateSelect(document.querySelector('.recipe-select'));
+                    setupSearch();
+                    
+                    // Set today's date
+                    document.getElementById('date').valueAsDate = new Date();
+                } else {
+                    showStatus('No recipes found. Make sure your "Recipes" sheet tab has recipe names in column A.', 'error');
+                    console.error('No recipes in response:', data);
+                }
+            } catch (error) {
+                showStatus('Error loading recipes: ' + error.message, 'error');
+                console.error('Full error:', error);
+                
+                // Show form anyway so user can at least try to use it
+                document.getElementById('mainForm').style.display = 'block';
+                document.getElementById('date').valueAsDate = new Date();
+            }
+        }
+        
+        // Show status message
+        function showStatus(message, type) {
+            try {
+                const statusDiv = document.getElementById('statusMessage');
+                statusDiv.textContent = message;
+                statusDiv.className = 'status-message ' + type;
+                statusDiv.style.display = 'block';
+                
+                if (type === 'success') {
+                    setTimeout(() => {
+                        statusDiv.style.display = 'none';
+                    }, 5000);
+                }
+            } catch (error) {
+                console.error('Error showing status:', error);
+            }
+        }
+        
+        // Populate select dropdown
+        function populateSelect(selectElement, filterText = '') {
+            try {
+                const filter = filterText.toLowerCase();
+                const filtered = filterText ? 
+                    MASTER_RECIPES.filter(r => r.toLowerCase().includes(filter)) : 
+                    MASTER_RECIPES;
+                
+                selectElement.innerHTML = '<option value="">-- Select a recipe --</option>' + 
+                    filtered.map(recipe => `<option value="${recipe}">${recipe}</option>`).join('');
+            } catch (error) {
+                console.error('Error populating select:', error);
+            }
+        }
+        
+        // Setup search functionality
+        function setupSearch() {
+            try {
+                const searchInput = document.getElementById('recipeSearch');
+                const clearBtn = searchInput.nextElementSibling;
+                
+                searchInput.addEventListener('input', function() {
+                    const searchText = this.value.trim();
+                    
+                    // Show/hide clear button
+                    if (searchText) {
+                        clearBtn.classList.add('show');
+                    } else {
+                        clearBtn.classList.remove('show');
+                    }
+                    
+                    // Filter all select dropdowns
+                    document.querySelectorAll('.recipe-select').forEach(select => {
+                        const currentValue = select.value;
+                        populateSelect(select, searchText);
+                        // Restore selection if it still exists
+                        if (currentValue && Array.from(select.options).some(opt => opt.value === currentValue)) {
+                            select.value = currentValue;
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error('Error setting up search:', error);
+            }
+        }
+        
+        // Clear search
+        function clearSearch() {
+            try {
+                const searchInput = document.getElementById('recipeSearch');
+                searchInput.value = '';
+                searchInput.dispatchEvent(new Event('input'));
+            } catch (error) {
+                console.error('Error clearing search:', error);
+            }
+        }
+        
+        // Add recipe input
+        function addRecipeInput() {
+            try {
+                const container = document.getElementById('recipeInputs');
+                const div = document.createElement('div');
+                div.className = 'recipe-input-group';
+                div.innerHTML = `
+                    <select class="recipe-select">
+                        <option value="">-- Select a recipe --</option>
+                    </select>
+                    <button class="btn-remove" onclick="removeRecipeInput(this)">Remove</button>
+                `;
+                container.appendChild(div);
+                
+                const newSelect = div.querySelector('.recipe-select');
+                const searchText = document.getElementById('recipeSearch').value.trim();
+                populateSelect(newSelect, searchText);
+            } catch (error) {
+                console.error('Error adding recipe input:', error);
+            }
+        }
+        
+        // Remove recipe input
+        function removeRecipeInput(btn) {
+            try {
+                const selects = document.querySelectorAll('.recipe-select');
+                if (selects.length > 1) {
+                    btn.parentElement.remove();
+                }
+            } catch (error) {
+                console.error('Error removing recipe input:', error);
+            }
+        }
+        
+        // Format date
+        function formatDate(dateStr) {
+            const date = new Date(dateStr + 'T00:00:00');
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${months[date.getMonth()]} ${date.getDate()}`;
+        }
+        
+        // Save entry
+        async function saveEntry() {
+            try {
+                if (!webAppUrl) {
+                    showStatus('Please enter and save your Google Apps Script URL first', 'error');
+                    return;
+                }
+                
+                const dateInput = document.getElementById('date').value;
+                if (!dateInput) {
+                    showStatus('Please select a date', 'error');
+                    return;
+                }
+                
+                const selects = document.querySelectorAll('.recipe-select');
+                const recipes = [];
+                selects.forEach(select => {
+                    if (select.value) {
+                        recipes.push(select.value);
+                    }
+                });
+                
+                if (recipes.length === 0) {
+                    showStatus('Please select at least one recipe', 'error');
+                    return;
+                }
+                
+                const formattedDate = formatDate(dateInput);
+                
+                await fetch(webAppUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        date: formattedDate,
+                        recipes: recipes.join(', ')
+                    })
+                });
+                
+                showStatus('Entry saved to Google Sheets!', 'success');
+                
+                // Clear selections
+                selects.forEach(select => select.value = '');
+                document.getElementById('date').valueAsDate = new Date();
+                
+                // Remove extra selects
+                const groups = document.querySelectorAll('.recipe-input-group');
+                for (let i = 1; i < groups.length; i++) {
+                    groups[i].remove();
+                }
+                
+                // Clear search
+                clearSearch();
+                
+            } catch (error) {
+                showStatus('Error saving to Google Sheets: ' + error.message, 'error');
+                console.error('Error:', error);
+            }
+        }
+        
+        // Initialize on page load
+        try {
+            loadWebAppUrl();
+        } catch (error) {
+            console.error('Initialization error:', error);
+            alert('Initialization error: ' + error.message);
+        }
+    </script>
+</body>
+</html>
