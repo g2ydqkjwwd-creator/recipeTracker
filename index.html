@@ -252,23 +252,9 @@
     <div class="container">
         <h1>🍳 Recipe Cooking Tracker</h1>
         
-        <div class="setup-notice" id="setupNotice">
-            <h3>⚙️ Setup Required</h3>
-            <p>1. Enter your Google Apps Script Web App URL below</p>
-            <p>2. Make sure your Google Sheet has two tabs: "Recipes" (master list) and "Cooking Log" (entries)</p>
-            <p>3. The "Recipes" tab should have recipe names in column A (one per row, starting row 2)</p>
-        </div>
-        
-        <div class="form-group">
-            <label for="webAppUrl">Google Apps Script URL</label>
-            <input type="url" id="webAppUrl" placeholder="https://script.google.com/macros/s/...">
-            <button class="btn btn-secondary" onclick="saveWebAppUrl()" style="margin-top: 8px;">Save URL & Load Recipes</button>
-            <button class="btn btn-secondary" onclick="showFormManually()" style="margin-top: 8px;">Show Form Anyway</button>
-        </div>
-        
         <div class="status-message" id="statusMessage"></div>
         
-        <div id="mainForm" style="display:none;">
+        <div id="mainForm">
             <div class="form-group">
                 <label for="date">Date</label>
                 <input type="date" id="date" required>
@@ -287,7 +273,7 @@
                 
                 <div class="recipe-input-group">
                     <select class="recipe-select">
-                        <option value="">-- Select a recipe --</option>
+                        <option value="">-- Loading recipes... --</option>
                     </select>
                     <button class="btn-remove" onclick="removeRecipeInput(this)" style="display:none;">Remove</button>
                 </div>
@@ -298,6 +284,9 @@
             
             <br>
             <a href="https://docs.google.com/spreadsheets/d/17CNvhJqO_YoaGzmPt0grt0Sbu_iu4vzIzwdjL0jWi6s/edit?usp=sharing" class="sheets-link" target="_blank">📊 Open Google Sheet</a>
+            
+            <br><br>
+            <button class="btn btn-secondary" onclick="manualReload()" style="background: #ff9500;">🔄 Reload Recipes</button>
         </div>
     </div>
 
@@ -387,26 +376,17 @@
                 if (data.recipes && data.recipes.length > 0) {
                     MASTER_RECIPES = data.recipes;
                     showStatus(`Loaded ${MASTER_RECIPES.length} recipes!`, 'success');
-                    document.getElementById('setupNotice').style.display = 'none';
-                    document.getElementById('mainForm').style.display = 'block';
                     
                     // Populate dropdowns
                     populateSelect(document.querySelector('.recipe-select'));
                     setupSearch();
-                    
-                    // Set today's date
-                    document.getElementById('date').valueAsDate = new Date();
                 } else {
-                    showStatus('No recipes found. Make sure your "Recipes" sheet tab has recipe names in column A.', 'error');
+                    showStatus('No recipes found. Check your "Recipes" sheet tab.', 'error');
                     console.error('No recipes in response:', data);
                 }
             } catch (error) {
-                showStatus('Error loading recipes: ' + error.message, 'error');
+                showStatus('Error loading recipes: ' + error.message + '. Click "Reload Recipes" to try again.', 'error');
                 console.error('Full error:', error);
-                
-                // Show form anyway so user can at least try to use it
-                document.getElementById('mainForm').style.display = 'block';
-                document.getElementById('date').valueAsDate = new Date();
             }
         }
         
