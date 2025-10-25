@@ -254,6 +254,11 @@
         
         <div class="status-message" id="statusMessage"></div>
         
+        <div style="background: #f0f0f0; padding: 15px; margin-bottom: 20px; border-radius: 8px; font-size: 14px;">
+            <strong>Debug Info:</strong>
+            <div id="debugInfo">Initializing...</div>
+        </div>
+        
         <div id="mainForm">
             <div class="form-group">
                 <label for="date">Date</label>
@@ -347,30 +352,43 @@
             }
         }
         
+        // Debug logging
+        function debugLog(message) {
+            const debugDiv = document.getElementById('debugInfo');
+            const timestamp = new Date().toLocaleTimeString();
+            debugDiv.innerHTML += '<br>' + timestamp + ': ' + message;
+            console.log(message);
+        }
+        
         // Load recipes from Google Sheet using JSONP
         function loadRecipesFromSheet() {
             try {
+                debugLog('Starting to load recipes...');
                 showStatus('Loading recipes from Google Sheet...', 'info');
-                console.log('Loading from:', webAppUrl);
+                debugLog('URL: ' + webAppUrl);
                 
                 // Create a script tag to load data (bypasses CORS)
                 const script = document.createElement('script');
                 const callbackName = 'handleRecipeData_' + Date.now();
+                debugLog('Callback name: ' + callbackName);
                 
                 // Create global callback
                 window[callbackName] = function(data) {
-                    console.log('Received data:', data);
+                    debugLog('Callback received!');
+                    debugLog('Data status: ' + (data ? data.status : 'no data'));
+                    debugLog('Recipe count: ' + (data && data.recipes ? data.recipes.length : 0));
                     
                     if (data.recipes && data.recipes.length > 0) {
                         MASTER_RECIPES = data.recipes;
                         showStatus(`Loaded ${MASTER_RECIPES.length} recipes!`, 'success');
+                        debugLog('✅ Successfully loaded ' + MASTER_RECIPES.length + ' recipes');
                         
                         // Populate dropdowns
                         populateSelect(document.querySelector('.recipe-select'));
                         setupSearch();
                     } else {
                         showStatus('No recipes found. Check your "Recipes" sheet tab.', 'error');
-                        console.error('No recipes in response:', data);
+                        debugLog('❌ No recipes in response');
                     }
                     
                     // Cleanup
@@ -380,19 +398,22 @@
                 
                 // Set error handler
                 script.onerror = function() {
+                    debugLog('❌ Script load error');
                     showStatus('Error loading recipes. Click "Reload Recipes" to try again.', 'error');
-                    console.error('Script load error');
                     document.head.removeChild(script);
                     delete window[callbackName];
                 };
                 
                 // Add script to document
-                script.src = webAppUrl + '?action=getRecipes&callback=' + callbackName;
+                const fullUrl = webAppUrl + '?action=getRecipes&callback=' + callbackName;
+                debugLog('Full URL: ' + fullUrl);
+                script.src = fullUrl;
                 document.head.appendChild(script);
+                debugLog('Script tag added to page');
                 
             } catch (error) {
+                debugLog('❌ Exception: ' + error.message);
                 showStatus('Error: ' + error.message, 'error');
-                console.error('Full error:', error);
             }
         }
         
