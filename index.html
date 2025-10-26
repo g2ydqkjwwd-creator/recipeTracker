@@ -187,6 +187,11 @@
             }
         }
         
+        function clearSearchAndResetDropdowns() {
+            document.getElementById('searchInput').value = '';
+            filterRecipes();
+        }
+        
         function filterRecipes() {
             var search = document.getElementById('searchInput').value.toLowerCase();
             var filtered = search ? 
@@ -207,11 +212,20 @@
                 '<button class="btn-remove" onclick="removeRecipe(this)">Remove</button>';
             container.appendChild(group);
             
+            var select = group.querySelector('.recipe-select');
+            
+            // Add change event listener to clear search when a recipe is selected
+            select.addEventListener('change', function() {
+                if (this.value) {
+                    clearSearchAndResetDropdowns();
+                }
+            });
+            
             var search = document.getElementById('searchInput').value.toLowerCase();
             var filtered = search ? 
                 allRecipes.filter(function(r) { return r.toLowerCase().indexOf(search) >= 0; }) : 
                 allRecipes;
-            populateDropdown(group.querySelector('.recipe-select'), filtered);
+            populateDropdown(select, filtered);
         }
         
         function removeRecipe(btn) {
@@ -232,6 +246,12 @@
                     var selects = document.querySelectorAll('.recipe-select');
                     selects.forEach(function(sel) {
                         populateDropdown(sel, allRecipes);
+                        // Add change event listener to existing selects
+                        sel.addEventListener('change', function() {
+                            if (this.value) {
+                                clearSearchAndResetDropdowns();
+                            }
+                        });
                     });
                 } else {
                     showStatus('No recipes found', 'error');
@@ -311,6 +331,13 @@
                 showStatus('Error saving', 'error');
             });
         }
+        
+        // Add event listener to custom recipe input to clear search when typing
+        document.getElementById('customRecipe').addEventListener('input', function() {
+            if (this.value) {
+                clearSearchAndResetDropdowns();
+            }
+        });
         
         document.getElementById('dateInput').valueAsDate = new Date();
         document.getElementById('searchInput').addEventListener('input', filterRecipes);
