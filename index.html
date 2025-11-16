@@ -122,7 +122,7 @@
                 <select class="recipe-select">
                     <option>Loading...</option>
                 </select>
-                <button class="btn-remove" onclick="removeRecipe(this)">Remove</button>
+                <button class="btn-remove" onclick="removeRecipe(this)" style="display:none;">Remove</button>
             </div>
         </div>
         
@@ -182,23 +182,10 @@
                 opt.textContent = r;
                 select.appendChild(opt);
             });
-            // Restore selection if the value exists in the new list
-            if (currentValue && recipes.indexOf(currentValue) >= 0) {
+            // Restore the previously selected value
+            if (currentValue) {
                 select.value = currentValue;
             }
-        }
-        
-        function clearSearchAndResetDropdowns() {
-            document.getElementById('searchInput').value = '';
-            // Repopulate dropdowns with full list while preserving selections
-            var selects = document.querySelectorAll('.recipe-select');
-            selects.forEach(function(sel) {
-                var currentValue = sel.value;
-                populateDropdown(sel, allRecipes);
-                if (currentValue) {
-                    sel.value = currentValue;
-                }
-            });
         }
         
         function filterRecipes() {
@@ -209,12 +196,7 @@
             
             var selects = document.querySelectorAll('.recipe-select');
             selects.forEach(function(sel) {
-                var currentValue = sel.value;
                 populateDropdown(sel, filtered);
-                // Restore the value if it's still in the filtered list
-                if (currentValue && filtered.indexOf(currentValue) >= 0) {
-                    sel.value = currentValue;
-                }
             });
         }
         
@@ -226,20 +208,11 @@
                 '<button class="btn-remove" onclick="removeRecipe(this)">Remove</button>';
             container.appendChild(group);
             
-            var select = group.querySelector('.recipe-select');
-            
-            // Add change event listener to clear search when a recipe is selected
-            select.addEventListener('change', function() {
-                if (this.value) {
-                    clearSearchAndResetDropdowns();
-                }
-            });
-            
             var search = document.getElementById('searchInput').value.toLowerCase();
             var filtered = search ? 
                 allRecipes.filter(function(r) { return r.toLowerCase().indexOf(search) >= 0; }) : 
                 allRecipes;
-            populateDropdown(select, filtered);
+            populateDropdown(group.querySelector('.recipe-select'), filtered);
         }
         
         function removeRecipe(btn) {
@@ -260,12 +233,6 @@
                     var selects = document.querySelectorAll('.recipe-select');
                     selects.forEach(function(sel) {
                         populateDropdown(sel, allRecipes);
-                        // Add change event listener to existing selects
-                        sel.addEventListener('change', function() {
-                            if (this.value) {
-                                clearSearchAndResetDropdowns();
-                            }
-                        });
                     });
                 } else {
                     showStatus('No recipes found', 'error');
@@ -305,6 +272,7 @@
                 }
             });
             
+            // Add custom recipe to the list if provided
             if (customRecipe) {
                 recipes.push(customRecipe);
             }
@@ -329,12 +297,14 @@
             }).then(function() {
                 showStatus('Saved! Meal ID created with ' + recipes.length + ' recipe(s)', 'success');
                 
+                // Clear form
                 selects.forEach(function(sel) { sel.value = ''; });
                 document.getElementById('customRecipe').value = '';
                 document.getElementById('occasion').value = '';
                 document.getElementById('notes').value = '';
                 document.getElementById('searchInput').value = '';
                 
+                // Remove extra recipe groups
                 var groups = document.querySelectorAll('.recipe-group');
                 for (var i = 1; i < groups.length; i++) {
                     groups[i].remove();
@@ -346,13 +316,7 @@
             });
         }
         
-        // Add event listener to custom recipe input to clear search when typing
-        document.getElementById('customRecipe').addEventListener('input', function() {
-            if (this.value) {
-                clearSearchAndResetDropdowns();
-            }
-        });
-        
+        // Initialize
         document.getElementById('dateInput').valueAsDate = new Date();
         document.getElementById('searchInput').addEventListener('input', filterRecipes);
         loadRecipes();
