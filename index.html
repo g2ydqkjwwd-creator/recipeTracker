@@ -176,12 +176,23 @@
         function populateDropdown(select, recipes) {
             var currentValue = select.value;
             select.innerHTML = '<option value="">-- Select a recipe --</option>';
+            
+            // If there's a current value that's not in the filtered list, add it first
+            if (currentValue && recipes.indexOf(currentValue) === -1) {
+                var opt = document.createElement('option');
+                opt.value = currentValue;
+                opt.textContent = currentValue;
+                select.appendChild(opt);
+            }
+            
+            // Add all filtered recipes
             recipes.forEach(function(r) {
                 var opt = document.createElement('option');
                 opt.value = r;
                 opt.textContent = r;
                 select.appendChild(opt);
             });
+            
             // Restore the previously selected value
             if (currentValue) {
                 select.value = currentValue;
