@@ -198,7 +198,7 @@
                 select.value = currentValue;
             }
         }
-        
+
         function filterRecipes() {
             var search = document.getElementById('searchInput').value.toLowerCase();
             var filtered = search ? 
@@ -207,10 +207,7 @@
             
             var selects = document.querySelectorAll('.recipe-select');
             selects.forEach(function(sel) {
-                // Only re-populate dropdowns that are empty or showing the placeholder
-                if (!sel.value || sel.value === '' || sel.options[0].text === 'Loading...') {
-                    populateDropdown(sel, filtered);
-                }
+                populateDropdown(sel, filtered);
             });
         }
         
