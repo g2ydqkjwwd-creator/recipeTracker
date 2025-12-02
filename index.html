@@ -198,7 +198,7 @@
                 select.value = currentValue;
             }
         }
-
+        
         function filterRecipes() {
             var search = document.getElementById('searchInput').value.toLowerCase();
             var filtered = search ? 
@@ -207,6 +207,7 @@
             
             var selects = document.querySelectorAll('.recipe-select');
             selects.forEach(function(sel) {
+                // Re-populate ALL dropdowns with filtered results
                 populateDropdown(sel, filtered);
             });
         }
