@@ -207,8 +207,8 @@
             
             var selects = document.querySelectorAll('.recipe-select');
             selects.forEach(function(sel) {
-                // Only re-populate dropdowns that don't have a selection yet
-                if (!sel.value) {
+                // Only re-populate dropdowns that are empty or showing the placeholder
+                if (!sel.value || sel.value === '' || sel.options[0].text === 'Loading...') {
                     populateDropdown(sel, filtered);
                 }
             });
