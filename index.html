@@ -295,6 +295,7 @@
             
             var callbackName = 'callback_' + Date.now();
             window[callbackName] = function(data) {
+                console.log('Recipe data received:', data);
                 if (data && data.recipes) {
                     allRecipes = data.recipes;
                     showStatus('Loaded ' + allRecipes.length + ' recipes!', 'success');
@@ -302,15 +303,18 @@
                     selects.forEach(function(sel) {
                         populateDropdown(sel, allRecipes);
                     });
+                } else if (data && data.status === 'error') {
+                    showStatus('Error: ' + (data.message || 'Unknown error'), 'error');
                 } else {
-                    showStatus('No recipes found', 'error');
+                    showStatus('No recipes found. Please add recipes to your "Recipes" sheet.', 'error');
                 }
             };
             
             var script = document.createElement('script');
             script.src = APP_URL + '?action=getRecipes&callback=' + callbackName;
             script.onerror = function() {
-                showStatus('Error loading recipes', 'error');
+                showStatus('Error connecting to Google Sheets. Check your script URL and deployment.', 'error');
+                console.error('Failed to load script from:', APP_URL);
             };
             document.head.appendChild(script);
         }
