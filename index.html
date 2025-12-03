@@ -47,6 +47,26 @@
         .recipe-group select {
             flex: 1;
         }
+        .leftover-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            font-size: 14px;
+            padding: 8px 12px;
+            background: #f5f5f7;
+            border-radius: 6px;
+        }
+        .leftover-checkbox input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+            cursor: pointer;
+        }
+        .leftover-checkbox label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+        }
         button {
             padding: 12px 24px;
             background: #0071e3;
@@ -142,6 +162,10 @@
                 <select class="recipe-select">
                     <option>Loading...</option>
                 </select>
+                <div class="leftover-checkbox">
+                    <input type="checkbox" class="leftover-check" id="leftover-0">
+                    <label for="leftover-0">Leftover</label>
+                </div>
                 <button class="btn-remove" onclick="removeRecipe(this)" style="display:none;">Remove</button>
             </div>
         </div>
@@ -151,6 +175,10 @@
         <div class="form-group" style="margin-top: 20px;">
             <label>Custom Recipe (optional) <span class="custom-badge">CUSTOM</span></label>
             <input type="text" id="customRecipe" placeholder="Enter dish name not in your list...">
+            <div class="leftover-checkbox" style="margin-top: 8px;">
+                <input type="checkbox" id="customLeftover">
+                <label for="customLeftover">This is a leftover</label>
+            </div>
             <div style="font-size: 13px; color: #6e6e73; margin-top: 6px;">
                 Custom recipes will be marked with an orange badge when saved.
             </div>
@@ -237,9 +265,14 @@
         
         function addRecipe() {
             var container = document.getElementById('recipeContainer');
+            var currentCount = container.querySelectorAll('.recipe-group').length;
             var group = document.createElement('div');
             group.className = 'recipe-group';
             group.innerHTML = '<select class="recipe-select"><option value="">-- Select a recipe --</option></select>' +
+                '<div class="leftover-checkbox">' +
+                '<input type="checkbox" class="leftover-check" id="leftover-' + currentCount + '">' +
+                '<label for="leftover-' + currentCount + '">Leftover</label>' +
+                '</div>' +
                 '<button class="btn-remove" onclick="removeRecipe(this)">Remove</button>';
             container.appendChild(group);
             
@@ -293,6 +326,7 @@
             var occasion = document.getElementById('occasion').value;
             var notes = document.getElementById('notes').value;
             var customRecipe = document.getElementById('customRecipe').value.trim();
+            var customLeftover = document.getElementById('customLeftover').checked;
             
             if (!date) {
                 showStatus('Please select a date', 'error');
@@ -300,26 +334,33 @@
             }
             
             var selects = document.querySelectorAll('.recipe-select');
+            var leftoverChecks = document.querySelectorAll('.leftover-check');
             var recipes = [];
-            selects.forEach(function(sel) {
+            
+            selects.forEach(function(sel, index) {
                 if (sel.value) {
                     recipes.push(sel.value);
                 }
             });
             
-            // Track which recipes are custom
-            var recipeData = recipes.map(function(r) {
-                return {
-                    name: r,
-                    isCustom: false
-                };
+            // Track which recipes are custom and which are leftovers
+            var recipeData = [];
+            selects.forEach(function(sel, index) {
+                if (sel.value) {
+                    recipeData.push({
+                        name: sel.value,
+                        isCustom: false,
+                        isLeftover: leftoverChecks[index].checked
+                    });
+                }
             });
             
             // Add custom recipe to the list if provided
             if (customRecipe) {
                 recipeData.push({
                     name: customRecipe,
-                    isCustom: true
+                    isCustom: true,
+                    isLeftover: customLeftover
                 });
             }
             
@@ -343,16 +384,22 @@
                 })
             }).then(function() {
                 var customCount = recipeData.filter(function(r) { return r.isCustom; }).length;
+                var leftoverCount = recipeData.filter(function(r) { return r.isLeftover; }).length;
                 var listCount = recipeData.length - customCount;
                 var msg = 'Saved! ' + listCount + ' from list';
                 if (customCount > 0) {
                     msg += ', ' + customCount + ' custom';
                 }
+                if (leftoverCount > 0) {
+                    msg += ', ' + leftoverCount + ' leftover';
+                }
                 showStatus(msg, 'success');
                 
                 // Clear form
                 selects.forEach(function(sel) { sel.value = ''; });
+                leftoverChecks.forEach(function(check) { check.checked = false; });
                 document.getElementById('customRecipe').value = '';
+                document.getElementById('customLeftover').checked = false;
                 document.getElementById('occasion').value = '';
                 document.getElementById('notes').value = '';
                 document.getElementById('searchInput').value = '';
