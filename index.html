@@ -93,6 +93,26 @@
             border-radius: 4px;
             font-size: 14px;
         }
+        .custom-badge {
+            display: inline-block;
+            background: #ff9500;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 8px;
+            font-weight: 600;
+        }
+        .list-badge {
+            display: inline-block;
+            background: #34c759;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 8px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -129,8 +149,11 @@
         <button class="btn-secondary" onclick="addRecipe()">+ Add Another Recipe</button>
         
         <div class="form-group" style="margin-top: 20px;">
-            <label>Custom Recipe (optional)</label>
+            <label>Custom Recipe (optional) <span class="custom-badge">CUSTOM</span></label>
             <input type="text" id="customRecipe" placeholder="Enter dish name not in your list...">
+            <div style="font-size: 13px; color: #6e6e73; margin-top: 6px;">
+                Custom recipes will be marked with an orange badge when saved.
+            </div>
         </div>
         
         <div class="form-group">
@@ -284,12 +307,23 @@
                 }
             });
             
+            // Track which recipes are custom
+            var recipeData = recipes.map(function(r) {
+                return {
+                    name: r,
+                    isCustom: false
+                };
+            });
+            
             // Add custom recipe to the list if provided
             if (customRecipe) {
-                recipes.push(customRecipe);
+                recipeData.push({
+                    name: customRecipe,
+                    isCustom: true
+                });
             }
             
-            if (recipes.length === 0) {
+            if (recipeData.length === 0) {
                 showStatus('Please select at least one recipe or enter a custom recipe', 'error');
                 return;
             }
@@ -302,12 +336,19 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     date: formatDate(date),
-                    recipes: recipes,
+                    recipes: recipeData.map(function(r) { return r.name; }),
+                    recipeData: recipeData,
                     occasion: occasion,
                     notes: notes
                 })
             }).then(function() {
-                showStatus('Saved! Meal ID created with ' + recipes.length + ' recipe(s)', 'success');
+                var customCount = recipeData.filter(function(r) { return r.isCustom; }).length;
+                var listCount = recipeData.length - customCount;
+                var msg = 'Saved! ' + listCount + ' from list';
+                if (customCount > 0) {
+                    msg += ', ' + customCount + ' custom';
+                }
+                showStatus(msg, 'success');
                 
                 // Clear form
                 selects.forEach(function(sel) { sel.value = ''; });
