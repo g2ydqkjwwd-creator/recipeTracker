@@ -47,7 +47,7 @@
         .recipe-group select {
             flex: 1;
         }
-        .leftover-checkbox {
+        .checkbox-group {
             display: flex;
             align-items: center;
             gap: 6px;
@@ -57,15 +57,23 @@
             background: #f5f5f7;
             border-radius: 6px;
         }
-        .leftover-checkbox input[type="checkbox"] {
+        .checkbox-group input[type="checkbox"] {
             width: auto;
             margin: 0;
             cursor: pointer;
         }
-        .leftover-checkbox label {
+        .checkbox-group label {
             margin: 0;
             cursor: pointer;
             font-weight: normal;
+        }
+        .custom-recipe-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .custom-recipe-row input[type="text"] {
+            flex: 1;
         }
         button {
             padding: 12px 24px;
@@ -113,6 +121,14 @@
             border-radius: 4px;
             font-size: 14px;
         }
+        .warning-box {
+            background: #fff4e5;
+            border-left: 4px solid #ff9500;
+            padding: 12px;
+            margin-bottom: 16px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
         .custom-badge {
             display: inline-block;
             background: #ff9500;
@@ -143,6 +159,10 @@
             <strong>📝 Meal ID Design:</strong> Each meal gets a unique ID. All recipes you add will be linked to this meal.
         </div>
         
+        <div class="warning-box">
+            <strong>📋 Note:</strong> To add recipes to your master list, edit the "Recipes" sheet in your Google Spreadsheet. This form only tracks meals using existing recipes.
+        </div>
+        
         <div class="status" id="status"></div>
         
         <div class="form-group">
@@ -162,9 +182,13 @@
                 <select class="recipe-select">
                     <option>Loading...</option>
                 </select>
-                <div class="leftover-checkbox">
+                <div class="checkbox-group">
                     <input type="checkbox" class="leftover-check" id="leftover-0">
                     <label for="leftover-0">Leftover</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" class="ingredient-check" id="ingredient-0">
+                    <label for="ingredient-0">Ingredient</label>
                 </div>
                 <button class="btn-remove" onclick="removeRecipe(this)" style="display:none;">Remove</button>
             </div>
@@ -172,12 +196,20 @@
         
         <button class="btn-secondary" onclick="addRecipe()">+ Add Another Recipe</button>
         
+        <button class="btn-secondary" onclick="addRecipe()">+ Add Another Recipe</button>
+        
         <div class="form-group" style="margin-top: 20px;">
             <label>Custom Recipe (optional) <span class="custom-badge">CUSTOM</span></label>
-            <input type="text" id="customRecipe" placeholder="Enter dish name not in your list...">
-            <div class="leftover-checkbox" style="margin-top: 8px;">
-                <input type="checkbox" id="customLeftover">
-                <label for="customLeftover">This is a leftover</label>
+            <div class="custom-recipe-row">
+                <input type="text" id="customRecipe" placeholder="Enter dish name not in your list...">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="customLeftover">
+                    <label for="customLeftover">Leftover</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="customIngredient">
+                    <label for="customIngredient">Ingredient</label>
+                </div>
             </div>
             <div style="font-size: 13px; color: #6e6e73; margin-top: 6px;">
                 Custom recipes will be marked with an orange badge when saved.
@@ -269,9 +301,13 @@
             var group = document.createElement('div');
             group.className = 'recipe-group';
             group.innerHTML = '<select class="recipe-select"><option value="">-- Select a recipe --</option></select>' +
-                '<div class="leftover-checkbox">' +
+                '<div class="checkbox-group">' +
                 '<input type="checkbox" class="leftover-check" id="leftover-' + currentCount + '">' +
                 '<label for="leftover-' + currentCount + '">Leftover</label>' +
+                '</div>' +
+                '<div class="checkbox-group">' +
+                '<input type="checkbox" class="ingredient-check" id="ingredient-' + currentCount + '">' +
+                '<label for="ingredient-' + currentCount + '">Ingredient</label>' +
                 '</div>' +
                 '<button class="btn-remove" onclick="removeRecipe(this)">Remove</button>';
             container.appendChild(group);
@@ -331,6 +367,7 @@
             var notes = document.getElementById('notes').value;
             var customRecipe = document.getElementById('customRecipe').value.trim();
             var customLeftover = document.getElementById('customLeftover').checked;
+            var customIngredient = document.getElementById('customIngredient').checked;
             
             if (!date) {
                 showStatus('Please select a date', 'error');
@@ -339,6 +376,7 @@
             
             var selects = document.querySelectorAll('.recipe-select');
             var leftoverChecks = document.querySelectorAll('.leftover-check');
+            var ingredientChecks = document.querySelectorAll('.ingredient-check');
             var recipes = [];
             
             selects.forEach(function(sel, index) {
@@ -347,14 +385,15 @@
                 }
             });
             
-            // Track which recipes are custom and which are leftovers
+            // Track which recipes are custom, leftovers, and ingredients
             var recipeData = [];
             selects.forEach(function(sel, index) {
                 if (sel.value) {
                     recipeData.push({
                         name: sel.value,
                         isCustom: false,
-                        isLeftover: leftoverChecks[index].checked
+                        isLeftover: leftoverChecks[index].checked,
+                        isIngredient: ingredientChecks[index].checked
                     });
                 }
             });
@@ -364,7 +403,8 @@
                 recipeData.push({
                     name: customRecipe,
                     isCustom: true,
-                    isLeftover: customLeftover
+                    isLeftover: customLeftover,
+                    isIngredient: customIngredient
                 });
             }
             
@@ -389,6 +429,7 @@
             }).then(function() {
                 var customCount = recipeData.filter(function(r) { return r.isCustom; }).length;
                 var leftoverCount = recipeData.filter(function(r) { return r.isLeftover; }).length;
+                var ingredientCount = recipeData.filter(function(r) { return r.isIngredient; }).length;
                 var listCount = recipeData.length - customCount;
                 var msg = 'Saved! ' + listCount + ' from list';
                 if (customCount > 0) {
@@ -397,13 +438,18 @@
                 if (leftoverCount > 0) {
                     msg += ', ' + leftoverCount + ' leftover';
                 }
+                if (ingredientCount > 0) {
+                    msg += ', ' + ingredientCount + ' ingredient';
+                }
                 showStatus(msg, 'success');
                 
                 // Clear form
                 selects.forEach(function(sel) { sel.value = ''; });
                 leftoverChecks.forEach(function(check) { check.checked = false; });
+                ingredientChecks.forEach(function(check) { check.checked = false; });
                 document.getElementById('customRecipe').value = '';
                 document.getElementById('customLeftover').checked = false;
+                document.getElementById('customIngredient').checked = false;
                 document.getElementById('occasion').value = '';
                 document.getElementById('notes').value = '';
                 document.getElementById('searchInput').value = '';
