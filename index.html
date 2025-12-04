@@ -194,10 +194,6 @@
             </div>
         </div>
         
-        <button class="btn-secondary" onclick="addRecipe()">+ Add Another Recipe</button>
-        
-        <button class="btn-secondary" onclick="addRecipe()">+ Add Another Recipe</button>
-        
         <div class="form-group" style="margin-top: 20px;">
             <label>Custom Recipe (optional) <span class="custom-badge">CUSTOM</span></label>
             <div class="custom-recipe-row">
@@ -215,6 +211,8 @@
                 Custom recipes will be marked with an orange badge when saved.
             </div>
         </div>
+        
+        <button class="btn-secondary" onclick="addRecipe()">+ Add Another Recipe</button>
         
         <div class="form-group">
             <label>Occasion</label>
@@ -260,7 +258,6 @@
             var currentValue = select.value;
             select.innerHTML = '<option value="">-- Select a recipe --</option>';
             
-            // If there's a current value that's not in the filtered list, add it first
             if (currentValue && recipes.indexOf(currentValue) === -1) {
                 var opt = document.createElement('option');
                 opt.value = currentValue;
@@ -268,7 +265,6 @@
                 select.appendChild(opt);
             }
             
-            // Add all filtered recipes
             recipes.forEach(function(r) {
                 var opt = document.createElement('option');
                 opt.value = r;
@@ -276,7 +272,6 @@
                 select.appendChild(opt);
             });
             
-            // Restore the previously selected value
             if (currentValue) {
                 select.value = currentValue;
             }
@@ -290,7 +285,6 @@
             
             var selects = document.querySelectorAll('.recipe-select');
             selects.forEach(function(sel) {
-                // Re-populate ALL dropdowns with filtered results
                 populateDropdown(sel, filtered);
             });
         }
@@ -385,7 +379,6 @@
                 }
             });
             
-            // Track which recipes are custom, leftovers, and ingredients
             var recipeData = [];
             selects.forEach(function(sel, index) {
                 if (sel.value) {
@@ -398,7 +391,6 @@
                 }
             });
             
-            // Add custom recipe to the list if provided
             if (customRecipe) {
                 recipeData.push({
                     name: customRecipe,
@@ -443,7 +435,6 @@
                 }
                 showStatus(msg, 'success');
                 
-                // Clear form
                 selects.forEach(function(sel) { sel.value = ''; });
                 leftoverChecks.forEach(function(check) { check.checked = false; });
                 ingredientChecks.forEach(function(check) { check.checked = false; });
@@ -454,7 +445,6 @@
                 document.getElementById('notes').value = '';
                 document.getElementById('searchInput').value = '';
                 
-                // Remove extra recipe groups
                 var groups = document.querySelectorAll('.recipe-group');
                 for (var i = 1; i < groups.length; i++) {
                     groups[i].remove();
@@ -466,7 +456,6 @@
             });
         }
         
-        // Initialize
         document.getElementById('dateInput').valueAsDate = new Date();
         document.getElementById('searchInput').addEventListener('input', filterRecipes);
         loadRecipes();
