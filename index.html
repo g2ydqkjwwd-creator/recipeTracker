@@ -43,9 +43,29 @@
             gap: 8px;
             margin-bottom: 8px;
             align-items: center;
+            flex-wrap: wrap;
         }
-        .recipe-group select {
+        .recipe-group select,
+        .recipe-group .custom-recipe-input {
             flex: 1;
+            min-width: 200px;
+        }
+        @media (max-width: 768px) {
+            .recipe-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .recipe-group select,
+            .recipe-group .custom-recipe-input {
+                width: 100%;
+                min-width: unset;
+            }
+            .checkbox-group {
+                justify-content: center;
+            }
+            .btn-remove {
+                width: 100%;
+            }
         }
         .checkbox-group {
             display: flex;
