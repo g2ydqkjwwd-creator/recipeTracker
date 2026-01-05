@@ -233,7 +233,7 @@
         
         <div id="customRecipeContainer">
             <div class="recipe-group">
-                <input type="text" class="custom-recipe-input" placeholder="Enter dish name not in your list...">
+                <input type="text" class="custom-recipe-input" placeholder="Enter dish name not in your list..." list="customRecipeDatalist">
                 <div class="checkbox-group">
                     <input type="checkbox" class="custom-leftover-check" id="custom-leftover-0">
                     <label for="custom-leftover-0">Leftover</label>
@@ -249,6 +249,8 @@
                 <button class="btn-remove" onclick="removeCustomRecipe(this)" style="display:none;">Remove</button>
             </div>
         </div>
+        
+        <datalist id="customRecipeDatalist"></datalist>
         
         <button class="btn-secondary" onclick="addRecipe()">+ Add Recipe from List</button>
         <button class="btn-secondary" onclick="addCustomRecipe()">+ Add Custom Recipe</button>
@@ -281,6 +283,7 @@
     <script>
         var APP_URL = 'https://script.google.com/macros/s/AKfycbx38pcxeGRvghnzwZyVU4ZlzpvmUyY3MxF_K4_QTBdn1hoXWVSkeldlb2j8e0H8qtor1A/exec';
         var allRecipes = [];
+        var customRecipesList = [];
         
         function showStatus(msg, type) {
             var s = document.getElementById('status');
@@ -361,7 +364,7 @@
             var currentCount = container.querySelectorAll('.recipe-group').length;
             var group = document.createElement('div');
             group.className = 'recipe-group';
-            group.innerHTML = '<input type="text" class="custom-recipe-input" placeholder="Enter dish name not in your list...">' +
+            group.innerHTML = '<input type="text" class="custom-recipe-input" placeholder="Enter dish name not in your list..." list="customRecipeDatalist">' +
                 '<div class="checkbox-group">' +
                 '<input type="checkbox" class="custom-leftover-check" id="custom-leftover-' + currentCount + '">' +
                 '<label for="custom-leftover-' + currentCount + '">Leftover</label>' +
@@ -400,14 +403,21 @@
                 console.log('Recipe data received:', data);
                 if (data && data.recipes) {
                     allRecipes = data.recipes;
-                    showStatus('Loaded ' + allRecipes.length + ' recipes!', 'success');
                     var selects = document.querySelectorAll('.recipe-select');
                     selects.forEach(function(sel) {
                         populateDropdown(sel, allRecipes);
                     });
-                } else if (data && data.status === 'error') {
-                    showStatus('Error: ' + (data.message || 'Unknown error'), 'error');
-                } else {
+                }
+                if (data && data.customRecipes) {
+                    customRecipesList = data.customRecipes;
+                    populateCustomRecipeDatalist();
+                }
+                
+                var recipeCount = (data && data.recipes) ? data.recipes.length : 0;
+                var customCount = (data && data.customRecipes) ? data.customRecipes.length : 0;
+                showStatus('Loaded ' + recipeCount + ' recipes and ' + customCount + ' custom recipes!', 'success');
+                
+                if (!data || (!data.recipes && !data.customRecipes)) {
                     showStatus('No recipes found. Please add recipes to your "Recipes" sheet.', 'error');
                 }
             };
@@ -419,6 +429,16 @@
                 console.error('Failed to load script from:', APP_URL);
             };
             document.head.appendChild(script);
+        }
+        
+        function populateCustomRecipeDatalist() {
+            var datalist = document.getElementById('customRecipeDatalist');
+            datalist.innerHTML = '';
+            customRecipesList.forEach(function(recipe) {
+                var option = document.createElement('option');
+                option.value = recipe;
+                datalist.appendChild(option);
+            });
         }
         
         function formatDate(d) {
