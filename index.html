@@ -46,7 +46,8 @@
             flex-wrap: wrap;
         }
         .recipe-group select,
-        .recipe-group .custom-recipe-input {
+        .recipe-group .custom-recipe-input,
+        .recipe-group .custom-recipe-select {
             flex: 1;
             min-width: 200px;
         }
@@ -56,7 +57,8 @@
                 align-items: stretch;
             }
             .recipe-group select,
-            .recipe-group .custom-recipe-input {
+            .recipe-group .custom-recipe-input,
+            .recipe-group .custom-recipe-select {
                 width: 100%;
                 min-width: unset;
             }
@@ -96,6 +98,14 @@
             flex: 1;
         }
         .custom-recipe-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: -apple-system, sans-serif;
+        }
+        .custom-recipe-select {
             flex: 1;
             padding: 12px;
             border: 1px solid #d2d2d7;
@@ -233,7 +243,11 @@
         
         <div id="customRecipeContainer">
             <div class="recipe-group">
-                <input type="text" class="custom-recipe-input" placeholder="Enter dish name not in your list..." list="customRecipeDatalist">
+                <select class="custom-recipe-select">
+                    <option value="">-- Select a custom recipe --</option>
+                    <option value="__NEW__">+ Add New Custom Recipe</option>
+                </select>
+                <input type="text" class="custom-recipe-input" placeholder="Enter new recipe name..." style="display:none;">
                 <div class="checkbox-group">
                     <input type="checkbox" class="custom-leftover-check" id="custom-leftover-0">
                     <label for="custom-leftover-0">Leftover</label>
@@ -364,7 +378,11 @@
             var currentCount = container.querySelectorAll('.recipe-group').length;
             var group = document.createElement('div');
             group.className = 'recipe-group';
-            group.innerHTML = '<input type="text" class="custom-recipe-input" placeholder="Enter dish name not in your list..." list="customRecipeDatalist">' +
+            group.innerHTML = '<select class="custom-recipe-select" onchange="handleCustomRecipeChange(this)">' +
+                '<option value="">-- Select a custom recipe --</option>' +
+                '<option value="__NEW__">+ Add New Custom Recipe</option>' +
+                '</select>' +
+                '<input type="text" class="custom-recipe-input" placeholder="Enter new recipe name..." style="display:none;">' +
                 '<div class="checkbox-group">' +
                 '<input type="checkbox" class="custom-leftover-check" id="custom-leftover-' + currentCount + '">' +
                 '<label for="custom-leftover-' + currentCount + '">Leftover</label>' +
@@ -379,6 +397,33 @@
                 '</div>' +
                 '<button class="btn-remove" onclick="removeCustomRecipe(this)">Remove</button>';
             container.appendChild(group);
+            
+            // Populate the new dropdown with custom recipes
+            populateCustomRecipeDropdown(group.querySelector('.custom-recipe-select'));
+        }
+        
+        function handleCustomRecipeChange(select) {
+            var group = select.parentElement;
+            var input = group.querySelector('.custom-recipe-input');
+            
+            if (select.value === '__NEW__') {
+                select.style.display = 'none';
+                input.style.display = 'block';
+                input.focus();
+            }
+        }
+        
+        function populateCustomRecipeDropdown(select) {
+            // Keep the first two options
+            var html = '<option value="">-- Select a custom recipe --</option>' +
+                      '<option value="__NEW__">+ Add New Custom Recipe</option>';
+            
+            // Add all custom recipes
+            customRecipesList.forEach(function(recipe) {
+                html += '<option value="' + recipe + '">' + recipe + '</option>';
+            });
+            
+            select.innerHTML = html;
         }
         
         function removeRecipe(btn) {
@@ -410,7 +455,11 @@
                 }
                 if (data && data.customRecipes) {
                     customRecipesList = data.customRecipes;
-                    populateCustomRecipeDatalist();
+                    // Populate all custom recipe dropdowns
+                    var customSelects = document.querySelectorAll('.custom-recipe-select');
+                    customSelects.forEach(function(sel) {
+                        populateCustomRecipeDropdown(sel);
+                    });
                 }
                 
                 var recipeCount = (data && data.recipes) ? data.recipes.length : 0;
@@ -462,6 +511,7 @@
             var ingredientChecks = document.querySelectorAll('.ingredient-check');
             var storeboughtChecks = document.querySelectorAll('.storebought-check');
             
+            var customSelects = document.querySelectorAll('.custom-recipe-select');
             var customInputs = document.querySelectorAll('.custom-recipe-input');
             var customLeftoverChecks = document.querySelectorAll('.custom-leftover-check');
             var customIngredientChecks = document.querySelectorAll('.custom-ingredient-check');
@@ -483,8 +533,18 @@
             });
             
             // Add custom recipes
-            customInputs.forEach(function(input, index) {
-                var recipeName = input.value.trim();
+            customSelects.forEach(function(select, index) {
+                var recipeName = '';
+                
+                // Check if dropdown is visible and has a value
+                if (select.style.display !== 'none' && select.value && select.value !== '__NEW__') {
+                    recipeName = select.value;
+                }
+                // Check if input is visible and has a value
+                else if (customInputs[index].style.display !== 'none') {
+                    recipeName = customInputs[index].value.trim();
+                }
+                
                 if (recipeName) {
                     recipeData.push({
                         name: recipeName,
@@ -540,7 +600,14 @@
                 leftoverChecks.forEach(function(check) { check.checked = false; });
                 ingredientChecks.forEach(function(check) { check.checked = false; });
                 storeboughtChecks.forEach(function(check) { check.checked = false; });
-                customInputs.forEach(function(input) { input.value = ''; });
+                customSelects.forEach(function(sel) { 
+                    sel.value = ''; 
+                    sel.style.display = 'block';
+                });
+                customInputs.forEach(function(input) { 
+                    input.value = ''; 
+                    input.style.display = 'none';
+                });
                 customLeftoverChecks.forEach(function(check) { check.checked = false; });
                 customIngredientChecks.forEach(function(check) { check.checked = false; });
                 customStoreboughtChecks.forEach(function(check) { check.checked = false; });
@@ -560,6 +627,11 @@
                 }
                 
                 filterRecipes();
+                
+                // Reload recipes to get any new custom recipes
+                setTimeout(function() {
+                    loadRecipes();
+                }, 1000);
             }).catch(function(e) {
                 showStatus('Error saving', 'error');
             });
@@ -567,6 +639,15 @@
         
         document.getElementById('dateInput').valueAsDate = new Date();
         document.getElementById('searchInput').addEventListener('input', filterRecipes);
+        
+        // Add event listener to first custom recipe dropdown
+        var firstCustomSelect = document.querySelector('.custom-recipe-select');
+        if (firstCustomSelect) {
+            firstCustomSelect.addEventListener('change', function() {
+                handleCustomRecipeChange(this);
+            });
+        }
+        
         loadRecipes();
     </script>
 </body>
