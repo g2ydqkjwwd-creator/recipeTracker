@@ -218,7 +218,7 @@
         <div id="recipeContainer">
             <div class="recipe-group">
                 <select class="recipe-select">
-                    <option>Loading...</option>
+                    <option value="">-- Select a recipe --</option>
                 </select>
                 <div class="checkbox-group">
                     <input type="checkbox" class="leftover-check" id="leftover-0">
@@ -272,7 +272,6 @@
         <div class="form-group">
             <label>Occasion</label>
             <select id="occasion">
-                <option value="">-- Select occasion --</option>
                 <option value="Regular Meal">Regular Meal</option>
                 <option value="Party">Party</option>
                 <option value="Holiday">Holiday</option>
@@ -615,7 +614,7 @@
                 customLeftoverChecks.forEach(function(check) { check.checked = false; });
                 customIngredientChecks.forEach(function(check) { check.checked = false; });
                 customStoreboughtChecks.forEach(function(check) { check.checked = false; });
-                document.getElementById('occasion').value = '';
+                document.getElementById('occasion').value = 'Regular Meal';
                 document.getElementById('notes').value = '';
                 document.getElementById('searchInput').value = '';
                 
