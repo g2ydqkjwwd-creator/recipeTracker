@@ -418,8 +418,12 @@
             var html = '<option value="">-- Select a custom recipe --</option>' +
                       '<option value="__NEW__">+ Add New Custom Recipe</option>';
             
-            // Add all custom recipes
-            customRecipesList.forEach(function(recipe) {
+            // Sort custom recipes alphabetically and add them
+            var sortedRecipes = customRecipesList.slice().sort(function(a, b) {
+                return a.toLowerCase().localeCompare(b.toLowerCase());
+            });
+            
+            sortedRecipes.forEach(function(recipe) {
                 html += '<option value="' + recipe + '">' + recipe + '</option>';
             });
             
