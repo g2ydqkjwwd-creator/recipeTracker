@@ -232,18 +232,18 @@
             </div>
         </div>
         
-        <h3>Custom Recipes <span class="custom-badge">CUSTOM</span></h3>
+        <h3>Custom Recipes <span class="custom-badge">HOUSE SPECIAL</span></h3>
         <p style="font-size: 14px; color: #6e6e73; margin-top: -8px; margin-bottom: 16px;">
-            Add recipes that aren't in your master list. These will be marked with an orange badge when saved.
+            Add recipes that aren't in your master list. These will be marked as "House Special" when saved.
         </p>
         
         <div id="customRecipeContainer">
             <div class="recipe-group">
                 <select class="custom-recipe-select">
-                    <option value="">-- Select a custom recipe --</option>
-                    <option value="__NEW__">+ Add New Custom Recipe</option>
+                    <option value="">-- Select a house special --</option>
+                    <option value="__NEW__">+ Add New House Special</option>
                 </select>
-                <input type="text" class="custom-recipe-input" placeholder="Enter new recipe name..." style="display:none;">
+                <input type="text" class="custom-recipe-input" placeholder="Enter new house special name..." style="display:none;">
                 <div class="checkbox-group">
                     <input type="checkbox" class="custom-leftover-check" id="custom-leftover-0">
                     <label for="custom-leftover-0">Leftover</label>
@@ -259,7 +259,7 @@
         <datalist id="customRecipeDatalist"></datalist>
         
         <button class="btn-secondary" onclick="addRecipe()">+ Add Recipe from List</button>
-        <button class="btn-secondary" onclick="addCustomRecipe()">+ Add Custom Recipe</button>
+        <button class="btn-secondary" onclick="addCustomRecipe()">+ Add House Special</button>
         
         <div class="form-group">
             <label>Occasion</label>
@@ -366,10 +366,10 @@
             var group = document.createElement('div');
             group.className = 'recipe-group';
             group.innerHTML = '<select class="custom-recipe-select" onchange="handleCustomRecipeChange(this)">' +
-                '<option value="">-- Select a custom recipe --</option>' +
-                '<option value="__NEW__">+ Add New Custom Recipe</option>' +
+                '<option value="">-- Select a house special --</option>' +
+                '<option value="__NEW__">+ Add New House Special</option>' +
                 '</select>' +
-                '<input type="text" class="custom-recipe-input" placeholder="Enter new recipe name..." style="display:none;">' +
+                '<input type="text" class="custom-recipe-input" placeholder="Enter new house special name..." style="display:none;">' +
                 '<div class="checkbox-group">' +
                 '<input type="checkbox" class="custom-leftover-check" id="custom-leftover-' + currentCount + '">' +
                 '<label for="custom-leftover-' + currentCount + '">Leftover</label>' +
@@ -398,8 +398,8 @@
         
         function populateCustomRecipeDropdown(select) {
             // Keep the first two options
-            var html = '<option value="">-- Select a custom recipe --</option>' +
-                      '<option value="__NEW__">+ Add New Custom Recipe</option>';
+            var html = '<option value="">-- Select a house special --</option>' +
+                      '<option value="__NEW__">+ Add New House Special</option>';
             
             // Sort custom recipes alphabetically and add them
             var sortedRecipes = customRecipesList.slice().sort(function(a, b) {
@@ -451,7 +451,7 @@
                 
                 var recipeCount = (data && data.recipes) ? data.recipes.length : 0;
                 var customCount = (data && data.customRecipes) ? data.customRecipes.length : 0;
-                showStatus('Loaded ' + recipeCount + ' recipes and ' + customCount + ' custom recipes!', 'success');
+                showStatus('Loaded ' + recipeCount + ' recipes and ' + customCount + ' house specials!', 'success');
                 
                 if (!data || (!data.recipes && !data.customRecipes)) {
                     showStatus('No recipes found. Please add recipes to your "Recipes" sheet.', 'error');
@@ -540,7 +540,7 @@
             });
             
             if (recipeData.length === 0) {
-                showStatus('Please select at least one recipe or enter a custom recipe', 'error');
+                showStatus('Please select at least one recipe or house special', 'error');
                 return;
             }
             
@@ -564,7 +564,7 @@
                 var listCount = recipeData.length - customCount;
                 var msg = 'Saved! ' + listCount + ' from list';
                 if (customCount > 0) {
-                    msg += ', ' + customCount + ' custom';
+                    msg += ', ' + customCount + ' house special';
                 }
                 if (leftoverCount > 0) {
                     msg += ', ' + leftoverCount + ' leftover';
