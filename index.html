@@ -472,11 +472,7 @@
             container.appendChild(group);
             
             // Populate the new dropdown with extras
-            var search = document.getElementById('searchExtrasInput').value.toLowerCase();
-            var filtered = search ? 
-                extrasList.filter(function(r) { return r.toLowerCase().indexOf(search) >= 0; }) : 
-                extrasList;
-            populateExtrasDropdown(group.querySelector('.extras-select'), filtered);
+            populateExtrasDropdown(group.querySelector('.extras-select'));
         }
         
         function handleCustomRecipeChange(select) {
