@@ -443,7 +443,11 @@
             container.appendChild(group);
             
             // Populate the new dropdown with custom recipes
-            populateCustomRecipeDropdown(group.querySelector('.custom-recipe-select'));
+            var search = document.getElementById('searchCustomInput').value.toLowerCase();
+            var filtered = search ? 
+                customRecipesList.filter(function(r) { return r.toLowerCase().indexOf(search) >= 0; }) : 
+                customRecipesList;
+            populateCustomRecipeDropdown(group.querySelector('.custom-recipe-select'), filtered);
         }
         
         function addExtra() {
@@ -468,7 +472,11 @@
             container.appendChild(group);
             
             // Populate the new dropdown with extras
-            populateExtrasDropdown(group.querySelector('.extras-select'));
+            var search = document.getElementById('searchExtrasInput').value.toLowerCase();
+            var filtered = search ? 
+                extrasList.filter(function(r) { return r.toLowerCase().indexOf(search) >= 0; }) : 
+                extrasList;
+            populateExtrasDropdown(group.querySelector('.extras-select'), filtered);
         }
         
         function handleCustomRecipeChange(select) {
@@ -565,7 +573,7 @@
                     // Populate all custom recipe dropdowns
                     var customSelects = document.querySelectorAll('.custom-recipe-select');
                     customSelects.forEach(function(sel) {
-                        populateCustomRecipeDropdown(sel);
+                        populateCustomRecipeDropdown(sel, undefined);
                     });
                 }
                 if (data && data.extras) {
@@ -573,7 +581,7 @@
                     // Populate all extras dropdowns
                     var extrasSelects = document.querySelectorAll('.extras-select');
                     extrasSelects.forEach(function(sel) {
-                        populateExtrasDropdown(sel);
+                        populateExtrasDropdown(sel, undefined);
                     });
                 }
                 
