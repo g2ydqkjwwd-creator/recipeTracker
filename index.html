@@ -443,11 +443,7 @@
             container.appendChild(group);
             
             // Populate the new dropdown with custom recipes
-            var search = document.getElementById('searchCustomInput').value.toLowerCase();
-            var filtered = search ? 
-                customRecipesList.filter(function(r) { return r.toLowerCase().indexOf(search) >= 0; }) : 
-                customRecipesList;
-            populateCustomRecipeDropdown(group.querySelector('.custom-recipe-select'), filtered);
+            populateCustomRecipeDropdown(group.querySelector('.custom-recipe-select'));
         }
         
         function addExtra() {
