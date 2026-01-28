@@ -47,7 +47,9 @@
         }
         .recipe-group select,
         .recipe-group .custom-recipe-input,
-        .recipe-group .custom-recipe-select {
+        .recipe-group .custom-recipe-select,
+        .recipe-group .extras-input,
+        .recipe-group .extras-select {
             flex: 1;
             min-width: 200px;
         }
@@ -58,7 +60,9 @@
             }
             .recipe-group select,
             .recipe-group .custom-recipe-input,
-            .recipe-group .custom-recipe-select {
+            .recipe-group .custom-recipe-select,
+            .recipe-group .extras-input,
+            .recipe-group .extras-select {
                 width: 100%;
                 min-width: unset;
             }
@@ -106,6 +110,22 @@
             font-family: -apple-system, sans-serif;
         }
         .custom-recipe-select {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: -apple-system, sans-serif;
+        }
+        .extras-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: -apple-system, sans-serif;
+        }
+        .extras-select {
             flex: 1;
             padding: 12px;
             border: 1px solid #d2d2d7;
@@ -170,6 +190,16 @@
         .custom-badge {
             display: inline-block;
             background: #ff9500;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 8px;
+            font-weight: 600;
+        }
+        .extras-badge {
+            display: inline-block;
+            background: #5856d6;
             color: white;
             padding: 2px 8px;
             border-radius: 4px;
@@ -265,6 +295,7 @@
         
         <button class="btn-secondary" onclick="addRecipe()">+ Add Recipe from List</button>
         <button class="btn-secondary" onclick="addCustomRecipe()">+ Add House Special</button>
+        <button class="btn-secondary" onclick="addExtra()">+ Add Extra</button>
         
         <div class="form-group">
             <label>Occasion</label>
@@ -294,6 +325,7 @@
         var APP_URL = 'https://script.google.com/macros/s/AKfycbx38pcxeGRvghnzwZyVU4ZlzpvmUyY3MxF_K4_QTBdn1hoXWVSkeldlb2j8e0H8qtor1A/exec';
         var allRecipes = [];
         var customRecipesList = [];
+        var extrasList = [];
         
         function showStatus(msg, type) {
             var s = document.getElementById('status');
@@ -353,6 +385,18 @@
             });
         }
         
+        function filterExtras() {
+            var search = document.getElementById('searchExtrasInput').value.toLowerCase();
+            var filtered = search ? 
+                extrasList.filter(function(r) { return r.toLowerCase().indexOf(search) >= 0; }) : 
+                extrasList;
+            
+            var selects = document.querySelectorAll('.extras-select');
+            selects.forEach(function(sel) {
+                populateExtrasDropdown(sel, filtered);
+            });
+        }
+        
         function addRecipe() {
             var container = document.getElementById('recipeContainer');
             var currentCount = container.querySelectorAll('.recipe-group').length;
@@ -402,9 +446,45 @@
             populateCustomRecipeDropdown(group.querySelector('.custom-recipe-select'));
         }
         
+        function addExtra() {
+            var container = document.getElementById('extrasContainer');
+            var currentCount = container.querySelectorAll('.recipe-group').length;
+            var group = document.createElement('div');
+            group.className = 'recipe-group';
+            group.innerHTML = '<select class="extras-select" onchange="handleExtrasChange(this)">' +
+                '<option value="">-- Select an extra --</option>' +
+                '<option value="__NEW__">+ Add New Extra</option>' +
+                '</select>' +
+                '<input type="text" class="extras-input" placeholder="Enter new extra name..." style="display:none;">' +
+                '<div class="checkbox-group">' +
+                '<input type="checkbox" class="extras-leftover-check" id="extras-leftover-' + currentCount + '">' +
+                '<label for="extras-leftover-' + currentCount + '">Leftover</label>' +
+                '</div>' +
+                '<div class="checkbox-group">' +
+                '<input type="checkbox" class="extras-storebought-check" id="extras-storebought-' + currentCount + '" checked>' +
+                '<label for="extras-storebought-' + currentCount + '">Store Bought</label>' +
+                '</div>' +
+                '<button class="btn-remove" onclick="removeExtra(this)">Remove</button>';
+            container.appendChild(group);
+            
+            // Populate the new dropdown with extras
+            populateExtrasDropdown(group.querySelector('.extras-select'));
+        }
+        
         function handleCustomRecipeChange(select) {
             var group = select.parentElement;
             var input = group.querySelector('.custom-recipe-input');
+            
+            if (select.value === '__NEW__') {
+                select.style.display = 'none';
+                input.style.display = 'block';
+                input.focus();
+            }
+        }
+        
+        function handleExtrasChange(select) {
+            var group = select.parentElement;
+            var input = group.querySelector('.extras-input');
             
             if (select.value === '__NEW__') {
                 select.style.display = 'none';
@@ -460,6 +540,13 @@
             }
         }
         
+        function removeExtra(btn) {
+            var groups = document.querySelectorAll('#extrasContainer .recipe-group');
+            if (groups.length > 1) {
+                btn.parentElement.remove();
+            }
+        }
+        
         function loadRecipes() {
             showStatus('Loading recipes...', 'info');
             
@@ -481,12 +568,21 @@
                         populateCustomRecipeDropdown(sel);
                     });
                 }
+                if (data && data.extras) {
+                    extrasList = data.extras;
+                    // Populate all extras dropdowns
+                    var extrasSelects = document.querySelectorAll('.extras-select');
+                    extrasSelects.forEach(function(sel) {
+                        populateExtrasDropdown(sel);
+                    });
+                }
                 
                 var recipeCount = (data && data.recipes) ? data.recipes.length : 0;
                 var customCount = (data && data.customRecipes) ? data.customRecipes.length : 0;
-                showStatus('Loaded ' + recipeCount + ' recipes and ' + customCount + ' house specials!', 'success');
+                var extrasCount = (data && data.extras) ? data.extras.length : 0;
+                showStatus('Loaded ' + recipeCount + ' recipes, ' + customCount + ' house specials, and ' + extrasCount + ' extras!', 'success');
                 
-                if (!data || (!data.recipes && !data.customRecipes)) {
+                if (!data || (!data.recipes && !data.customRecipes && !data.extras)) {
                     showStatus('No recipes found. Please add recipes to your "Recipes" sheet.', 'error');
                 }
             };
@@ -498,6 +594,39 @@
                 console.error('Failed to load script from:', APP_URL);
             };
             document.head.appendChild(script);
+        }
+        
+        function populateExtrasDropdown(select, filteredList) {
+            // Use filtered list if provided, otherwise use full list
+            var itemsToShow = filteredList !== undefined ? filteredList : extrasList;
+            
+            // Keep the current selection
+            var currentValue = select.value;
+            
+            // Keep the first two options
+            var html = '<option value="">-- Select an extra --</option>' +
+                      '<option value="__NEW__">+ Add New Extra</option>';
+            
+            // If current value is not in filtered list, keep it as an option
+            if (currentValue && currentValue !== '' && currentValue !== '__NEW__' && itemsToShow.indexOf(currentValue) === -1) {
+                html += '<option value="' + currentValue + '">' + currentValue + '</option>';
+            }
+            
+            // Sort and add filtered extras
+            var sortedItems = itemsToShow.slice().sort(function(a, b) {
+                return a.toLowerCase().localeCompare(b.toLowerCase());
+            });
+            
+            sortedItems.forEach(function(item) {
+                html += '<option value="' + item + '">' + item + '</option>';
+            });
+            
+            select.innerHTML = html;
+            
+            // Restore selection
+            if (currentValue) {
+                select.value = currentValue;
+            }
         }
         
         function populateCustomRecipeDatalist() {
@@ -535,6 +664,11 @@
             var customLeftoverChecks = document.querySelectorAll('.custom-leftover-check');
             var customStoreboughtChecks = document.querySelectorAll('.custom-storebought-check');
             
+            var extrasSelects = document.querySelectorAll('.extras-select');
+            var extrasInputs = document.querySelectorAll('.extras-input');
+            var extrasLeftoverChecks = document.querySelectorAll('.extras-leftover-check');
+            var extrasStoreboughtChecks = document.querySelectorAll('.extras-storebought-check');
+            
             var recipeData = [];
             
             // Add recipes from list
@@ -566,14 +700,39 @@
                     recipeData.push({
                         name: recipeName,
                         isCustom: true,
+                        isExtra: false,
                         isLeftover: customLeftoverChecks[index].checked,
                         isStoreBought: customStoreboughtChecks[index].checked
                     });
                 }
             });
             
+            // Add extras
+            extrasSelects.forEach(function(select, index) {
+                var extraName = '';
+                
+                // Check if dropdown is visible and has a value
+                if (select.style.display !== 'none' && select.value && select.value !== '__NEW__') {
+                    extraName = select.value;
+                }
+                // Check if input is visible and has a value
+                else if (extrasInputs[index].style.display !== 'none') {
+                    extraName = extrasInputs[index].value.trim();
+                }
+                
+                if (extraName) {
+                    recipeData.push({
+                        name: extraName,
+                        isCustom: false,
+                        isExtra: true,
+                        isLeftover: extrasLeftoverChecks[index].checked,
+                        isStoreBought: extrasStoreboughtChecks[index].checked
+                    });
+                }
+            });
+            
             if (recipeData.length === 0) {
-                showStatus('Please select at least one recipe or house special', 'error');
+                showStatus('Please select at least one recipe, house special, or extra', 'error');
                 return;
             }
             
@@ -592,12 +751,16 @@
                 })
             }).then(function() {
                 var customCount = recipeData.filter(function(r) { return r.isCustom; }).length;
+                var extrasCount = recipeData.filter(function(r) { return r.isExtra; }).length;
                 var leftoverCount = recipeData.filter(function(r) { return r.isLeftover; }).length;
                 var storeboughtCount = recipeData.filter(function(r) { return r.isStoreBought; }).length;
-                var listCount = recipeData.length - customCount;
+                var listCount = recipeData.length - customCount - extrasCount;
                 var msg = 'Saved! ' + listCount + ' from list';
                 if (customCount > 0) {
                     msg += ', ' + customCount + ' house special';
+                }
+                if (extrasCount > 0) {
+                    msg += ', ' + extrasCount + ' extras';
                 }
                 if (leftoverCount > 0) {
                     msg += ', ' + leftoverCount + ' leftover';
@@ -621,10 +784,21 @@
                 });
                 customLeftoverChecks.forEach(function(check) { check.checked = false; });
                 customStoreboughtChecks.forEach(function(check) { check.checked = false; });
+                extrasSelects.forEach(function(sel) { 
+                    sel.value = ''; 
+                    sel.style.display = 'block';
+                });
+                extrasInputs.forEach(function(input) { 
+                    input.value = ''; 
+                    input.style.display = 'none';
+                });
+                extrasLeftoverChecks.forEach(function(check) { check.checked = false; });
+                extrasStoreboughtChecks.forEach(function(check) { check.checked = true; }); // Reset to checked
                 document.getElementById('occasion').value = 'Regular Meal';
                 document.getElementById('notes').value = '';
                 document.getElementById('searchInput').value = '';
                 document.getElementById('searchCustomInput').value = '';
+                document.getElementById('searchExtrasInput').value = '';
                 
                 // Remove extra recipe groups
                 var groups = document.querySelectorAll('#recipeContainer .recipe-group');
@@ -637,8 +811,14 @@
                     customGroups[i].remove();
                 }
                 
+                var extrasGroups = document.querySelectorAll('#extrasContainer .recipe-group');
+                for (var i = 1; i < extrasGroups.length; i++) {
+                    extrasGroups[i].remove();
+                }
+                
                 filterRecipes();
                 filterCustomRecipes();
+                filterExtras();
                 
                 // Reload recipes to get any new custom recipes
                 setTimeout(function() {
@@ -652,12 +832,21 @@
         document.getElementById('dateInput').valueAsDate = new Date();
         document.getElementById('searchInput').addEventListener('input', filterRecipes);
         document.getElementById('searchCustomInput').addEventListener('input', filterCustomRecipes);
+        document.getElementById('searchExtrasInput').addEventListener('input', filterExtras);
         
         // Add event listener to first custom recipe dropdown
         var firstCustomSelect = document.querySelector('.custom-recipe-select');
         if (firstCustomSelect) {
             firstCustomSelect.addEventListener('change', function() {
                 handleCustomRecipeChange(this);
+            });
+        }
+        
+        // Add event listener to first extras dropdown
+        var firstExtrasSelect = document.querySelector('.extras-select');
+        if (firstExtrasSelect) {
+            firstExtrasSelect.addEventListener('change', function() {
+                handleExtrasChange(this);
             });
         }
         
