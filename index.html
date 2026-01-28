@@ -237,6 +237,11 @@
             Add recipes that aren't in your master list. These will be marked as "House Special" when saved.
         </p>
         
+        <div class="form-group">
+            <label>Search House Specials</label>
+            <input type="text" id="searchCustomInput" placeholder="Type to filter house specials...">
+        </div>
+        
         <div id="customRecipeContainer">
             <div class="recipe-group">
                 <select class="custom-recipe-select">
@@ -336,6 +341,18 @@
             });
         }
         
+        function filterCustomRecipes() {
+            var search = document.getElementById('searchCustomInput').value.toLowerCase();
+            var filtered = search ? 
+                customRecipesList.filter(function(r) { return r.toLowerCase().indexOf(search) >= 0; }) : 
+                customRecipesList;
+            
+            var selects = document.querySelectorAll('.custom-recipe-select');
+            selects.forEach(function(sel) {
+                populateCustomRecipeDropdown(sel, filtered);
+            });
+        }
+        
         function addRecipe() {
             var container = document.getElementById('recipeContainer');
             var currentCount = container.querySelectorAll('.recipe-group').length;
@@ -396,13 +413,24 @@
             }
         }
         
-        function populateCustomRecipeDropdown(select) {
+        function populateCustomRecipeDropdown(select, filteredList) {
+            // Use filtered list if provided, otherwise use full list
+            var recipesToShow = filteredList !== undefined ? filteredList : customRecipesList;
+            
+            // Keep the current selection
+            var currentValue = select.value;
+            
             // Keep the first two options
             var html = '<option value="">-- Select a house special --</option>' +
                       '<option value="__NEW__">+ Add New House Special</option>';
             
-            // Sort custom recipes alphabetically and add them
-            var sortedRecipes = customRecipesList.slice().sort(function(a, b) {
+            // If current value is not in filtered list, keep it as an option
+            if (currentValue && currentValue !== '' && currentValue !== '__NEW__' && recipesToShow.indexOf(currentValue) === -1) {
+                html += '<option value="' + currentValue + '">' + currentValue + '</option>';
+            }
+            
+            // Sort and add filtered recipes
+            var sortedRecipes = recipesToShow.slice().sort(function(a, b) {
                 return a.toLowerCase().localeCompare(b.toLowerCase());
             });
             
@@ -411,6 +439,11 @@
             });
             
             select.innerHTML = html;
+            
+            // Restore selection
+            if (currentValue) {
+                select.value = currentValue;
+            }
         }
         
         function removeRecipe(btn) {
@@ -591,6 +624,7 @@
                 document.getElementById('occasion').value = 'Regular Meal';
                 document.getElementById('notes').value = '';
                 document.getElementById('searchInput').value = '';
+                document.getElementById('searchCustomInput').value = '';
                 
                 // Remove extra recipe groups
                 var groups = document.querySelectorAll('#recipeContainer .recipe-group');
@@ -604,6 +638,7 @@
                 }
                 
                 filterRecipes();
+                filterCustomRecipes();
                 
                 // Reload recipes to get any new custom recipes
                 setTimeout(function() {
@@ -616,6 +651,7 @@
         
         document.getElementById('dateInput').valueAsDate = new Date();
         document.getElementById('searchInput').addEventListener('input', filterRecipes);
+        document.getElementById('searchCustomInput').addEventListener('input', filterCustomRecipes);
         
         // Add event listener to first custom recipe dropdown
         var firstCustomSelect = document.querySelector('.custom-recipe-select');
