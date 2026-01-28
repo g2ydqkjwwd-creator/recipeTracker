@@ -225,10 +225,6 @@
                     <label for="leftover-0">Leftover</label>
                 </div>
                 <div class="checkbox-group">
-                    <input type="checkbox" class="ingredient-check" id="ingredient-0">
-                    <label for="ingredient-0">Ingredient</label>
-                </div>
-                <div class="checkbox-group">
                     <input type="checkbox" class="storebought-check" id="storebought-0">
                     <label for="storebought-0">Store Bought</label>
                 </div>
@@ -251,10 +247,6 @@
                 <div class="checkbox-group">
                     <input type="checkbox" class="custom-leftover-check" id="custom-leftover-0">
                     <label for="custom-leftover-0">Leftover</label>
-                </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" class="custom-ingredient-check" id="custom-ingredient-0">
-                    <label for="custom-ingredient-0">Ingredient</label>
                 </div>
                 <div class="checkbox-group">
                     <input type="checkbox" class="custom-storebought-check" id="custom-storebought-0">
@@ -355,10 +347,6 @@
                 '<label for="leftover-' + currentCount + '">Leftover</label>' +
                 '</div>' +
                 '<div class="checkbox-group">' +
-                '<input type="checkbox" class="ingredient-check" id="ingredient-' + currentCount + '">' +
-                '<label for="ingredient-' + currentCount + '">Ingredient</label>' +
-                '</div>' +
-                '<div class="checkbox-group">' +
                 '<input type="checkbox" class="storebought-check" id="storebought-' + currentCount + '">' +
                 '<label for="storebought-' + currentCount + '">Store Bought</label>' +
                 '</div>' +
@@ -385,10 +373,6 @@
                 '<div class="checkbox-group">' +
                 '<input type="checkbox" class="custom-leftover-check" id="custom-leftover-' + currentCount + '">' +
                 '<label for="custom-leftover-' + currentCount + '">Leftover</label>' +
-                '</div>' +
-                '<div class="checkbox-group">' +
-                '<input type="checkbox" class="custom-ingredient-check" id="custom-ingredient-' + currentCount + '">' +
-                '<label for="custom-ingredient-' + currentCount + '">Ingredient</label>' +
                 '</div>' +
                 '<div class="checkbox-group">' +
                 '<input type="checkbox" class="custom-storebought-check" id="custom-storebought-' + currentCount + '">' +
@@ -511,13 +495,11 @@
             
             var selects = document.querySelectorAll('.recipe-select');
             var leftoverChecks = document.querySelectorAll('.leftover-check');
-            var ingredientChecks = document.querySelectorAll('.ingredient-check');
             var storeboughtChecks = document.querySelectorAll('.storebought-check');
             
             var customSelects = document.querySelectorAll('.custom-recipe-select');
             var customInputs = document.querySelectorAll('.custom-recipe-input');
             var customLeftoverChecks = document.querySelectorAll('.custom-leftover-check');
-            var customIngredientChecks = document.querySelectorAll('.custom-ingredient-check');
             var customStoreboughtChecks = document.querySelectorAll('.custom-storebought-check');
             
             var recipeData = [];
@@ -529,7 +511,6 @@
                         name: sel.value,
                         isCustom: false,
                         isLeftover: leftoverChecks[index].checked,
-                        isIngredient: ingredientChecks[index].checked,
                         isStoreBought: storeboughtChecks[index].checked
                     });
                 }
@@ -553,7 +534,6 @@
                         name: recipeName,
                         isCustom: true,
                         isLeftover: customLeftoverChecks[index].checked,
-                        isIngredient: customIngredientChecks[index].checked,
                         isStoreBought: customStoreboughtChecks[index].checked
                     });
                 }
@@ -580,7 +560,6 @@
             }).then(function() {
                 var customCount = recipeData.filter(function(r) { return r.isCustom; }).length;
                 var leftoverCount = recipeData.filter(function(r) { return r.isLeftover; }).length;
-                var ingredientCount = recipeData.filter(function(r) { return r.isIngredient; }).length;
                 var storeboughtCount = recipeData.filter(function(r) { return r.isStoreBought; }).length;
                 var listCount = recipeData.length - customCount;
                 var msg = 'Saved! ' + listCount + ' from list';
@@ -590,9 +569,6 @@
                 if (leftoverCount > 0) {
                     msg += ', ' + leftoverCount + ' leftover';
                 }
-                if (ingredientCount > 0) {
-                    msg += ', ' + ingredientCount + ' ingredient';
-                }
                 if (storeboughtCount > 0) {
                     msg += ', ' + storeboughtCount + ' store bought';
                 }
@@ -601,7 +577,6 @@
                 // Clear form
                 selects.forEach(function(sel) { sel.value = ''; });
                 leftoverChecks.forEach(function(check) { check.checked = false; });
-                ingredientChecks.forEach(function(check) { check.checked = false; });
                 storeboughtChecks.forEach(function(check) { check.checked = false; });
                 customSelects.forEach(function(sel) { 
                     sel.value = ''; 
@@ -612,7 +587,6 @@
                     input.style.display = 'none';
                 });
                 customLeftoverChecks.forEach(function(check) { check.checked = false; });
-                customIngredientChecks.forEach(function(check) { check.checked = false; });
                 customStoreboughtChecks.forEach(function(check) { check.checked = false; });
                 document.getElementById('occasion').value = 'Regular Meal';
                 document.getElementById('notes').value = '';
