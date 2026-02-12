@@ -288,6 +288,8 @@
         
         <br>
         <a href="https://docs.google.com/spreadsheets/d/17CNvhJqO_YoaGzmPt0grt0Sbu_iu4vzIzwdjL0jWi6s/edit" class="sheet-link" target="_blank">📊 Open Google Sheet</a>
+        
+        <div class="status" id="statusBottom"></div>
     </div>
 
     <script>
@@ -296,12 +298,20 @@
         var customRecipesList = [];
         
         function showStatus(msg, type) {
-            var s = document.getElementById('status');
-            s.textContent = msg;
-            s.className = 'status show ' + type;
+            // Update both status divs
+            var statusTop = document.getElementById('status');
+            var statusBottom = document.getElementById('statusBottom');
+            
+            statusTop.textContent = msg;
+            statusTop.className = 'status show ' + type;
+            
+            statusBottom.textContent = msg;
+            statusBottom.className = 'status show ' + type;
+            
             if (type === 'success') {
                 setTimeout(function() {
-                    s.className = 'status';
+                    statusTop.className = 'status';
+                    statusBottom.className = 'status';
                 }, 5000);
             }
         }
