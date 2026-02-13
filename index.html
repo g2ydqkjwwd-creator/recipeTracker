@@ -47,7 +47,10 @@
         }
         .recipe-group select,
         .recipe-group .custom-recipe-input,
-        .recipe-group .custom-recipe-select {
+        .recipe-group .custom-recipe-select,
+        .recipe-group .cookbook-recipe-input,
+        .recipe-group .cookbook-recipe-select,
+        .recipe-group .cookbook-reference-input {
             flex: 1;
             min-width: 200px;
         }
@@ -58,7 +61,10 @@
             }
             .recipe-group select,
             .recipe-group .custom-recipe-input,
-            .recipe-group .custom-recipe-select {
+            .recipe-group .custom-recipe-select,
+            .recipe-group .cookbook-recipe-input,
+            .recipe-group .cookbook-recipe-select,
+            .recipe-group .cookbook-reference-input {
                 width: 100%;
                 min-width: unset;
             }
@@ -97,7 +103,9 @@
         .custom-recipe-row input[type="text"] {
             flex: 1;
         }
-        .custom-recipe-input {
+        .custom-recipe-input,
+        .cookbook-recipe-input,
+        .cookbook-reference-input {
             flex: 1;
             padding: 12px;
             border: 1px solid #d2d2d7;
@@ -105,7 +113,8 @@
             font-size: 16px;
             font-family: -apple-system, sans-serif;
         }
-        .custom-recipe-select {
+        .custom-recipe-select,
+        .cookbook-recipe-select {
             flex: 1;
             padding: 12px;
             border: 1px solid #d2d2d7;
@@ -170,6 +179,16 @@
         .custom-badge {
             display: inline-block;
             background: #ff9500;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 8px;
+            font-weight: 600;
+        }
+        .cookbook-badge {
+            display: inline-block;
+            background: #5856d6;
             color: white;
             padding: 2px 8px;
             border-radius: 4px;
@@ -261,10 +280,42 @@
             </div>
         </div>
         
+        <h3>Cookbook Recipes <span class="cookbook-badge">COOKBOOK</span></h3>
+        <p style="font-size: 14px; color: #6e6e73; margin-top: -8px; margin-bottom: 16px;">
+            Add recipes from cookbooks. Include the cookbook name/reference for tracking.
+        </p>
+        
+        <div class="form-group">
+            <label>Search Cookbook Recipes</label>
+            <input type="text" id="searchCookbookInput" placeholder="Type to filter cookbook recipes...">
+        </div>
+        
+        <div id="cookbookRecipeContainer">
+            <div class="recipe-group">
+                <select class="cookbook-recipe-select">
+                    <option value="">-- Select a cookbook recipe --</option>
+                    <option value="__NEW__">+ Add New Cookbook Recipe</option>
+                </select>
+                <input type="text" class="cookbook-recipe-input" placeholder="Enter recipe name..." style="display:none;">
+                <input type="text" class="cookbook-reference-input" placeholder="Enter cookbook name/reference...">
+                <div class="checkbox-group">
+                    <input type="checkbox" class="cookbook-leftover-check" id="cookbook-leftover-0">
+                    <label for="cookbook-leftover-0">Leftover</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" class="cookbook-storebought-check" id="cookbook-storebought-0">
+                    <label for="cookbook-storebought-0">Store Bought</label>
+                </div>
+                <button class="btn-remove" onclick="removeCookbookRecipe(this)" style="display:none;">Remove</button>
+            </div>
+        </div>
+        
         <datalist id="customRecipeDatalist"></datalist>
+        <datalist id="cookbookRecipeDatalist"></datalist>
         
         <button class="btn-secondary" onclick="addRecipe()">+ Add Recipe from List</button>
         <button class="btn-secondary" onclick="addCustomRecipe()">+ Add House Special</button>
+        <button class="btn-secondary" onclick="addCookbookRecipe()">+ Add Cookbook Recipe</button>
         
         <div class="form-group">
             <label>Occasion</label>
@@ -296,6 +347,7 @@
         var APP_URL = 'https://script.google.com/macros/s/AKfycbx38pcxeGRvghnzwZyVU4ZlzpvmUyY3MxF_K4_QTBdn1hoXWVSkeldlb2j8e0H8qtor1A/exec';
         var allRecipes = [];
         var customRecipesList = [];
+        var cookbookRecipesList = [];
         
         function showStatus(msg, type) {
             // Update both status divs
@@ -363,6 +415,18 @@
             });
         }
         
+        function filterCookbookRecipes() {
+            var search = document.getElementById('searchCookbookInput').value.toLowerCase();
+            var filtered = search ? 
+                cookbookRecipesList.filter(function(r) { return r.name.toLowerCase().indexOf(search) >= 0; }) : 
+                cookbookRecipesList;
+            
+            var selects = document.querySelectorAll('.cookbook-recipe-select');
+            selects.forEach(function(sel) {
+                populateCookbookRecipeDropdown(sel, filtered);
+            });
+        }
+        
         function addRecipe() {
             var container = document.getElementById('recipeContainer');
             var currentCount = container.querySelectorAll('.recipe-group').length;
@@ -408,8 +472,32 @@
                 '<button class="btn-remove" onclick="removeCustomRecipe(this)">Remove</button>';
             container.appendChild(group);
             
-            // Populate the new dropdown with custom recipes
             populateCustomRecipeDropdown(group.querySelector('.custom-recipe-select'));
+        }
+        
+        function addCookbookRecipe() {
+            var container = document.getElementById('cookbookRecipeContainer');
+            var currentCount = container.querySelectorAll('.recipe-group').length;
+            var group = document.createElement('div');
+            group.className = 'recipe-group';
+            group.innerHTML = '<select class="cookbook-recipe-select" onchange="handleCookbookRecipeChange(this)">' +
+                '<option value="">-- Select a cookbook recipe --</option>' +
+                '<option value="__NEW__">+ Add New Cookbook Recipe</option>' +
+                '</select>' +
+                '<input type="text" class="cookbook-recipe-input" placeholder="Enter recipe name..." style="display:none;">' +
+                '<input type="text" class="cookbook-reference-input" placeholder="Enter cookbook name/reference...">' +
+                '<div class="checkbox-group">' +
+                '<input type="checkbox" class="cookbook-leftover-check" id="cookbook-leftover-' + currentCount + '">' +
+                '<label for="cookbook-leftover-' + currentCount + '">Leftover</label>' +
+                '</div>' +
+                '<div class="checkbox-group">' +
+                '<input type="checkbox" class="cookbook-storebought-check" id="cookbook-storebought-' + currentCount + '">' +
+                '<label for="cookbook-storebought-' + currentCount + '">Store Bought</label>' +
+                '</div>' +
+                '<button class="btn-remove" onclick="removeCookbookRecipe(this)">Remove</button>';
+            container.appendChild(group);
+            
+            populateCookbookRecipeDropdown(group.querySelector('.cookbook-recipe-select'));
         }
         
         function handleCustomRecipeChange(select) {
@@ -423,23 +511,35 @@
             }
         }
         
-        function populateCustomRecipeDropdown(select, filteredList) {
-            // Use filtered list if provided, otherwise use full list
-            var recipesToShow = filteredList !== undefined ? filteredList : customRecipesList;
+        function handleCookbookRecipeChange(select) {
+            var group = select.parentElement;
+            var input = group.querySelector('.cookbook-recipe-input');
+            var referenceInput = group.querySelector('.cookbook-reference-input');
             
-            // Keep the current selection
+            if (select.value === '__NEW__') {
+                select.style.display = 'none';
+                input.style.display = 'block';
+                input.focus();
+            } else if (select.value) {
+                // Find the cookbook recipe and pre-fill the reference
+                var recipe = cookbookRecipesList.find(function(r) { return r.name === select.value; });
+                if (recipe && recipe.reference) {
+                    referenceInput.value = recipe.reference;
+                }
+            }
+        }
+        
+        function populateCustomRecipeDropdown(select, filteredList) {
+            var recipesToShow = filteredList !== undefined ? filteredList : customRecipesList;
             var currentValue = select.value;
             
-            // Keep the first two options
             var html = '<option value="">-- Select a house special --</option>' +
                       '<option value="__NEW__">+ Add New House Special</option>';
             
-            // If current value is not in filtered list, keep it as an option
             if (currentValue && currentValue !== '' && currentValue !== '__NEW__' && recipesToShow.indexOf(currentValue) === -1) {
                 html += '<option value="' + currentValue + '">' + currentValue + '</option>';
             }
             
-            // Sort and add filtered recipes
             var sortedRecipes = recipesToShow.slice().sort(function(a, b) {
                 return a.toLowerCase().localeCompare(b.toLowerCase());
             });
@@ -450,7 +550,35 @@
             
             select.innerHTML = html;
             
-            // Restore selection
+            if (currentValue) {
+                select.value = currentValue;
+            }
+        }
+        
+        function populateCookbookRecipeDropdown(select, filteredList) {
+            var recipesToShow = filteredList !== undefined ? filteredList : cookbookRecipesList;
+            var currentValue = select.value;
+            
+            var html = '<option value="">-- Select a cookbook recipe --</option>' +
+                      '<option value="__NEW__">+ Add New Cookbook Recipe</option>';
+            
+            if (currentValue && currentValue !== '' && currentValue !== '__NEW__') {
+                var found = recipesToShow.find(function(r) { return r.name === currentValue; });
+                if (!found) {
+                    html += '<option value="' + currentValue + '">' + currentValue + '</option>';
+                }
+            }
+            
+            var sortedRecipes = recipesToShow.slice().sort(function(a, b) {
+                return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+            });
+            
+            sortedRecipes.forEach(function(recipe) {
+                html += '<option value="' + recipe.name + '">' + recipe.name + '</option>';
+            });
+            
+            select.innerHTML = html;
+            
             if (currentValue) {
                 select.value = currentValue;
             }
@@ -465,6 +593,13 @@
         
         function removeCustomRecipe(btn) {
             var groups = document.querySelectorAll('#customRecipeContainer .recipe-group');
+            if (groups.length > 1) {
+                btn.parentElement.remove();
+            }
+        }
+        
+        function removeCookbookRecipe(btn) {
+            var groups = document.querySelectorAll('#cookbookRecipeContainer .recipe-group');
             if (groups.length > 1) {
                 btn.parentElement.remove();
             }
@@ -485,19 +620,26 @@
                 }
                 if (data && data.customRecipes) {
                     customRecipesList = data.customRecipes;
-                    // Populate all custom recipe dropdowns
                     var customSelects = document.querySelectorAll('.custom-recipe-select');
                     customSelects.forEach(function(sel) {
                         populateCustomRecipeDropdown(sel);
                     });
                 }
+                if (data && data.cookbookRecipes) {
+                    cookbookRecipesList = data.cookbookRecipes;
+                    var cookbookSelects = document.querySelectorAll('.cookbook-recipe-select');
+                    cookbookSelects.forEach(function(sel) {
+                        populateCookbookRecipeDropdown(sel);
+                    });
+                }
                 
                 var recipeCount = (data && data.recipes) ? data.recipes.length : 0;
                 var customCount = (data && data.customRecipes) ? data.customRecipes.length : 0;
-                showStatus('Loaded ' + recipeCount + ' recipes and ' + customCount + ' house specials!', 'success');
+                var cookbookCount = (data && data.cookbookRecipes) ? data.cookbookRecipes.length : 0;
+                showStatus('Loaded ' + recipeCount + ' recipes, ' + customCount + ' house specials, and ' + cookbookCount + ' cookbook recipes!', 'success');
                 
-                if (!data || (!data.recipes && !data.customRecipes)) {
-                    showStatus('No recipes found. Please add recipes to your "Recipes" sheet.', 'error');
+                if (!data || (!data.recipes && !data.customRecipes && !data.cookbookRecipes)) {
+                    showStatus('No recipes found. Please add recipes to your sheets.', 'error');
                 }
             };
             
@@ -508,16 +650,6 @@
                 console.error('Failed to load script from:', APP_URL);
             };
             document.head.appendChild(script);
-        }
-        
-        function populateCustomRecipeDatalist() {
-            var datalist = document.getElementById('customRecipeDatalist');
-            datalist.innerHTML = '';
-            customRecipesList.forEach(function(recipe) {
-                var option = document.createElement('option');
-                option.value = recipe;
-                datalist.appendChild(option);
-            });
         }
         
         function formatDate(d) {
@@ -545,6 +677,12 @@
             var customLeftoverChecks = document.querySelectorAll('.custom-leftover-check');
             var customStoreboughtChecks = document.querySelectorAll('.custom-storebought-check');
             
+            var cookbookSelects = document.querySelectorAll('.cookbook-recipe-select');
+            var cookbookInputs = document.querySelectorAll('.cookbook-recipe-input');
+            var cookbookReferenceInputs = document.querySelectorAll('.cookbook-reference-input');
+            var cookbookLeftoverChecks = document.querySelectorAll('.cookbook-leftover-check');
+            var cookbookStoreboughtChecks = document.querySelectorAll('.cookbook-storebought-check');
+            
             var recipeData = [];
             
             // Add recipes from list
@@ -553,22 +691,20 @@
                     recipeData.push({
                         name: sel.value,
                         isCustom: false,
+                        isCookbook: false,
                         isLeftover: leftoverChecks[index].checked,
                         isStoreBought: storeboughtChecks[index].checked
                     });
                 }
             });
             
-            // Add custom recipes
+            // Add custom recipes (house specials)
             customSelects.forEach(function(select, index) {
                 var recipeName = '';
                 
-                // Check if dropdown is visible and has a value
                 if (select.style.display !== 'none' && select.value && select.value !== '__NEW__') {
                     recipeName = select.value;
-                }
-                // Check if input is visible and has a value
-                else if (customInputs[index].style.display !== 'none') {
+                } else if (customInputs[index].style.display !== 'none') {
                     recipeName = customInputs[index].value.trim();
                 }
                 
@@ -576,14 +712,41 @@
                     recipeData.push({
                         name: recipeName,
                         isCustom: true,
+                        isCookbook: false,
                         isLeftover: customLeftoverChecks[index].checked,
                         isStoreBought: customStoreboughtChecks[index].checked
                     });
                 }
             });
             
+            // Add cookbook recipes
+            cookbookSelects.forEach(function(select, index) {
+                var recipeName = '';
+                var cookbookRef = cookbookReferenceInputs[index].value.trim();
+                
+                if (select.style.display !== 'none' && select.value && select.value !== '__NEW__') {
+                    recipeName = select.value;
+                } else if (cookbookInputs[index].style.display !== 'none') {
+                    recipeName = cookbookInputs[index].value.trim();
+                }
+                
+                if (recipeName && cookbookRef) {
+                    recipeData.push({
+                        name: recipeName,
+                        isCustom: false,
+                        isCookbook: true,
+                        cookbookReference: cookbookRef,
+                        isLeftover: cookbookLeftoverChecks[index].checked,
+                        isStoreBought: cookbookStoreboughtChecks[index].checked
+                    });
+                } else if (recipeName && !cookbookRef) {
+                    showStatus('Please enter a cookbook reference for: ' + recipeName, 'error');
+                    return;
+                }
+            });
+            
             if (recipeData.length === 0) {
-                showStatus('Please select at least one recipe or house special', 'error');
+                showStatus('Please select at least one recipe', 'error');
                 return;
             }
             
@@ -602,12 +765,16 @@
                 })
             }).then(function() {
                 var customCount = recipeData.filter(function(r) { return r.isCustom; }).length;
+                var cookbookCount = recipeData.filter(function(r) { return r.isCookbook; }).length;
                 var leftoverCount = recipeData.filter(function(r) { return r.isLeftover; }).length;
                 var storeboughtCount = recipeData.filter(function(r) { return r.isStoreBought; }).length;
-                var listCount = recipeData.length - customCount;
+                var listCount = recipeData.length - customCount - cookbookCount;
                 var msg = 'Saved! ' + listCount + ' from list';
                 if (customCount > 0) {
                     msg += ', ' + customCount + ' house special';
+                }
+                if (cookbookCount > 0) {
+                    msg += ', ' + cookbookCount + ' cookbook';
                 }
                 if (leftoverCount > 0) {
                     msg += ', ' + leftoverCount + ' leftover';
@@ -631,10 +798,22 @@
                 });
                 customLeftoverChecks.forEach(function(check) { check.checked = false; });
                 customStoreboughtChecks.forEach(function(check) { check.checked = false; });
+                cookbookSelects.forEach(function(sel) { 
+                    sel.value = ''; 
+                    sel.style.display = 'block';
+                });
+                cookbookInputs.forEach(function(input) { 
+                    input.value = ''; 
+                    input.style.display = 'none';
+                });
+                cookbookReferenceInputs.forEach(function(input) { input.value = ''; });
+                cookbookLeftoverChecks.forEach(function(check) { check.checked = false; });
+                cookbookStoreboughtChecks.forEach(function(check) { check.checked = false; });
                 document.getElementById('occasion').value = 'Regular Meal';
                 document.getElementById('notes').value = '';
                 document.getElementById('searchInput').value = '';
                 document.getElementById('searchCustomInput').value = '';
+                document.getElementById('searchCookbookInput').value = '';
                 
                 // Remove extra recipe groups
                 var groups = document.querySelectorAll('#recipeContainer .recipe-group');
@@ -647,10 +826,16 @@
                     customGroups[i].remove();
                 }
                 
+                var cookbookGroups = document.querySelectorAll('#cookbookRecipeContainer .recipe-group');
+                for (var i = 1; i < cookbookGroups.length; i++) {
+                    cookbookGroups[i].remove();
+                }
+                
                 filterRecipes();
                 filterCustomRecipes();
+                filterCookbookRecipes();
                 
-                // Reload recipes to get any new custom recipes
+                // Reload recipes to get any new custom/cookbook recipes
                 setTimeout(function() {
                     loadRecipes();
                 }, 1000);
@@ -662,12 +847,21 @@
         document.getElementById('dateInput').valueAsDate = new Date();
         document.getElementById('searchInput').addEventListener('input', filterRecipes);
         document.getElementById('searchCustomInput').addEventListener('input', filterCustomRecipes);
+        document.getElementById('searchCookbookInput').addEventListener('input', filterCookbookRecipes);
         
         // Add event listener to first custom recipe dropdown
         var firstCustomSelect = document.querySelector('.custom-recipe-select');
         if (firstCustomSelect) {
             firstCustomSelect.addEventListener('change', function() {
                 handleCustomRecipeChange(this);
+            });
+        }
+        
+        // Add event listener to first cookbook recipe dropdown
+        var firstCookbookSelect = document.querySelector('.cookbook-recipe-select');
+        if (firstCookbookSelect) {
+            firstCookbookSelect.addEventListener('change', function() {
+                handleCookbookRecipeChange(this);
             });
         }
         
