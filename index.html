@@ -46,6 +46,7 @@
             flex-wrap: wrap;
         }
         .recipe-group select,
+        .recipe-group .recipe-input,
         .recipe-group .custom-recipe-input,
         .recipe-group .custom-recipe-select,
         .recipe-group .cookbook-recipe-input,
@@ -60,6 +61,7 @@
                 align-items: stretch;
             }
             .recipe-group select,
+            .recipe-group .recipe-input,
             .recipe-group .custom-recipe-input,
             .recipe-group .custom-recipe-select,
             .recipe-group .cookbook-recipe-input,
@@ -103,6 +105,7 @@
         .custom-recipe-row input[type="text"] {
             flex: 1;
         }
+        .recipe-input,
         .custom-recipe-input,
         .cookbook-recipe-input,
         .cookbook-reference-input {
@@ -113,6 +116,7 @@
             font-size: 16px;
             font-family: -apple-system, sans-serif;
         }
+        .recipe-select,
         .custom-recipe-select,
         .cookbook-recipe-select {
             flex: 1;
@@ -216,10 +220,6 @@
             <strong>📝 Meal ID Design:</strong> Each meal gets a unique ID. All recipes you add will be linked to this meal.
         </div>
         
-        <div class="warning-box">
-            <strong>📋 Note:</strong> To add recipes to your master list, edit the "Recipes" sheet in your Google Spreadsheet. This form only tracks meals using existing recipes.
-        </div>
-        
         <div class="status" id="status"></div>
         
         <div class="form-group">
@@ -227,7 +227,10 @@
             <input type="date" id="dateInput">
         </div>
         
-        <h3>Recipes (Menu)</h3>
+        <h3>Recipes (Master List) <span class="list-badge">FROM LIST</span></h3>
+        <p style="font-size: 14px; color: #6e6e73; margin-top: -8px; margin-bottom: 16px;">
+            Select from your master recipe list or add new recipes to the list.
+        </p>
         
         <div class="form-group">
             <label>Search Recipes</label>
@@ -238,7 +241,9 @@
             <div class="recipe-group">
                 <select class="recipe-select">
                     <option value="">-- Select a recipe --</option>
+                    <option value="__NEW__">+ Add New Recipe to List</option>
                 </select>
+                <input type="text" class="recipe-input" placeholder="Enter new recipe name..." style="display:none;">
                 <div class="checkbox-group">
                     <input type="checkbox" class="leftover-check" id="leftover-0">
                     <label for="leftover-0">Leftover</label>
@@ -253,7 +258,7 @@
         
         <h3>House Specials <span class="custom-badge">HOUSE SPECIAL</span></h3>
         <p style="font-size: 14px; color: #6e6e73; margin-top: -8px; margin-bottom: 16px;">
-            Add recipes that aren't in your master list. These will be marked as "House Special" when saved.
+            Add one-off recipes that won't be added to your master list. These will be marked as "House Special" when saved.
         </p>
         
         <div class="form-group">
@@ -310,9 +315,6 @@
             </div>
         </div>
         
-        <datalist id="customRecipeDatalist"></datalist>
-        <datalist id="cookbookRecipeDatalist"></datalist>
-        
         <button class="btn-secondary" onclick="addRecipe()">+ Add Recipe from List</button>
         <button class="btn-secondary" onclick="addCustomRecipe()">+ Add House Special</button>
         <button class="btn-secondary" onclick="addCookbookRecipe()">+ Add Cookbook Recipe</button>
@@ -368,23 +370,21 @@
             }
         }
         
-        function populateDropdown(select, recipes) {
+        function populateRecipeDropdown(select, recipes) {
             var currentValue = select.value;
-            select.innerHTML = '<option value="">-- Select a recipe --</option>';
             
-            if (currentValue && recipes.indexOf(currentValue) === -1) {
-                var opt = document.createElement('option');
-                opt.value = currentValue;
-                opt.textContent = currentValue;
-                select.appendChild(opt);
+            var html = '<option value="">-- Select a recipe --</option>' +
+                      '<option value="__NEW__">+ Add New Recipe to List</option>';
+            
+            if (currentValue && currentValue !== '' && currentValue !== '__NEW__' && recipes.indexOf(currentValue) === -1) {
+                html += '<option value="' + currentValue + '">' + currentValue + '</option>';
             }
             
             recipes.forEach(function(r) {
-                var opt = document.createElement('option');
-                opt.value = r;
-                opt.textContent = r;
-                select.appendChild(opt);
+                html += '<option value="' + r + '">' + r + '</option>';
             });
+            
+            select.innerHTML = html;
             
             if (currentValue) {
                 select.value = currentValue;
@@ -399,7 +399,7 @@
             
             var selects = document.querySelectorAll('.recipe-select');
             selects.forEach(function(sel) {
-                populateDropdown(sel, filtered);
+                populateRecipeDropdown(sel, filtered);
             });
         }
         
@@ -432,7 +432,11 @@
             var currentCount = container.querySelectorAll('.recipe-group').length;
             var group = document.createElement('div');
             group.className = 'recipe-group';
-            group.innerHTML = '<select class="recipe-select"><option value="">-- Select a recipe --</option></select>' +
+            group.innerHTML = '<select class="recipe-select" onchange="handleRecipeChange(this)">' +
+                '<option value="">-- Select a recipe --</option>' +
+                '<option value="__NEW__">+ Add New Recipe to List</option>' +
+                '</select>' +
+                '<input type="text" class="recipe-input" placeholder="Enter new recipe name..." style="display:none;">' +
                 '<div class="checkbox-group">' +
                 '<input type="checkbox" class="leftover-check" id="leftover-' + currentCount + '">' +
                 '<label for="leftover-' + currentCount + '">Leftover</label>' +
@@ -448,7 +452,7 @@
             var filtered = search ? 
                 allRecipes.filter(function(r) { return r.toLowerCase().indexOf(search) >= 0; }) : 
                 allRecipes;
-            populateDropdown(group.querySelector('.recipe-select'), filtered);
+            populateRecipeDropdown(group.querySelector('.recipe-select'), filtered);
         }
         
         function addCustomRecipe() {
@@ -498,6 +502,17 @@
             container.appendChild(group);
             
             populateCookbookRecipeDropdown(group.querySelector('.cookbook-recipe-select'));
+        }
+        
+        function handleRecipeChange(select) {
+            var group = select.parentElement;
+            var input = group.querySelector('.recipe-input');
+            
+            if (select.value === '__NEW__') {
+                select.style.display = 'none';
+                input.style.display = 'block';
+                input.focus();
+            }
         }
         
         function handleCustomRecipeChange(select) {
@@ -615,7 +630,7 @@
                     allRecipes = data.recipes;
                     var selects = document.querySelectorAll('.recipe-select');
                     selects.forEach(function(sel) {
-                        populateDropdown(sel, allRecipes);
+                        populateRecipeDropdown(sel, allRecipes);
                     });
                 }
                 if (data && data.customRecipes) {
@@ -669,6 +684,7 @@
             }
             
             var selects = document.querySelectorAll('.recipe-select');
+            var recipeInputs = document.querySelectorAll('.recipe-input');
             var leftoverChecks = document.querySelectorAll('.leftover-check');
             var storeboughtChecks = document.querySelectorAll('.storebought-check');
             
@@ -686,12 +702,21 @@
             var recipeData = [];
             
             // Add recipes from list
-            selects.forEach(function(sel, index) {
-                if (sel.value) {
+            selects.forEach(function(select, index) {
+                var recipeName = '';
+                
+                if (select.style.display !== 'none' && select.value && select.value !== '__NEW__') {
+                    recipeName = select.value;
+                } else if (recipeInputs[index].style.display !== 'none') {
+                    recipeName = recipeInputs[index].value.trim();
+                }
+                
+                if (recipeName) {
                     recipeData.push({
-                        name: sel.value,
+                        name: recipeName,
                         isCustom: false,
                         isCookbook: false,
+                        isFromList: true,
                         isLeftover: leftoverChecks[index].checked,
                         isStoreBought: storeboughtChecks[index].checked
                     });
@@ -713,6 +738,7 @@
                         name: recipeName,
                         isCustom: true,
                         isCookbook: false,
+                        isFromList: false,
                         isLeftover: customLeftoverChecks[index].checked,
                         isStoreBought: customStoreboughtChecks[index].checked
                     });
@@ -735,6 +761,7 @@
                         name: recipeName,
                         isCustom: false,
                         isCookbook: true,
+                        isFromList: false,
                         cookbookReference: cookbookRef,
                         isLeftover: cookbookLeftoverChecks[index].checked,
                         isStoreBought: cookbookStoreboughtChecks[index].checked
@@ -768,7 +795,7 @@
                 var cookbookCount = recipeData.filter(function(r) { return r.isCookbook; }).length;
                 var leftoverCount = recipeData.filter(function(r) { return r.isLeftover; }).length;
                 var storeboughtCount = recipeData.filter(function(r) { return r.isStoreBought; }).length;
-                var listCount = recipeData.length - customCount - cookbookCount;
+                var listCount = recipeData.filter(function(r) { return r.isFromList; }).length;
                 var msg = 'Saved! ' + listCount + ' from list';
                 if (customCount > 0) {
                     msg += ', ' + customCount + ' house special';
@@ -785,7 +812,14 @@
                 showStatus(msg, 'success');
                 
                 // Clear form
-                selects.forEach(function(sel) { sel.value = ''; });
+                selects.forEach(function(sel) { 
+                    sel.value = ''; 
+                    sel.style.display = 'block';
+                });
+                recipeInputs.forEach(function(input) { 
+                    input.value = ''; 
+                    input.style.display = 'none';
+                });
                 leftoverChecks.forEach(function(check) { check.checked = false; });
                 storeboughtChecks.forEach(function(check) { check.checked = false; });
                 customSelects.forEach(function(sel) { 
@@ -835,7 +869,7 @@
                 filterCustomRecipes();
                 filterCookbookRecipes();
                 
-                // Reload recipes to get any new custom/cookbook recipes
+                // Reload recipes to get any new recipes
                 setTimeout(function() {
                     loadRecipes();
                 }, 1000);
@@ -848,6 +882,14 @@
         document.getElementById('searchInput').addEventListener('input', filterRecipes);
         document.getElementById('searchCustomInput').addEventListener('input', filterCustomRecipes);
         document.getElementById('searchCookbookInput').addEventListener('input', filterCookbookRecipes);
+        
+        // Add event listener to first recipe dropdown
+        var firstRecipeSelect = document.querySelector('.recipe-select');
+        if (firstRecipeSelect) {
+            firstRecipeSelect.addEventListener('change', function() {
+                handleRecipeChange(this);
+            });
+        }
         
         // Add event listener to first custom recipe dropdown
         var firstCustomSelect = document.querySelector('.custom-recipe-select');
